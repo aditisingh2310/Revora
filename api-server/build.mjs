@@ -100,6 +100,10 @@ async function buildAll() {
       "puppeteer",
       "puppeteer-core",
       "electron",
+      "@libsql/*",
+      "@libsql-isomorphic-fetch",
+      "@libsql/hrana-client",
+      "libsql",
     ],
     sourcemap: "linked",
     plugins: [

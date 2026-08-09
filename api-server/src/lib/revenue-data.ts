@@ -126,11 +126,11 @@ export async function importNormalizedRows(
 export async function getRevenueCounts(organizationId: string) {
   const [customerCount, orderCount] = await Promise.all([
     db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({ count: sql<number>`count(*)` })
       .from(customersTable)
       .where(eq(customersTable.organizationId, organizationId)),
     db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({ count: sql<number>`count(*)` })
       .from(ordersTable)
       .where(eq(ordersTable.organizationId, organizationId)),
   ]);
@@ -147,7 +147,7 @@ export async function getProviderCounts(
 ) {
   const [customerCount, orderCount] = await Promise.all([
     db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({ count: sql<number>`count(*)` })
       .from(customersTable)
       .where(
         and(
@@ -156,7 +156,7 @@ export async function getProviderCounts(
         ),
       ),
     db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({ count: sql<number>`count(*)` })
       .from(ordersTable)
       .where(
         and(

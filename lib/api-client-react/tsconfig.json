@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "declaration": true,
+    "declarationMap": true,
+    "jsx": "react-jsx",
+    "lib": ["es2022", "dom", "dom.iterable"]
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../api-zod" }
+  ]
+}
