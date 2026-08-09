@@ -1,0 +1,583 @@
+We need to correct the direction of the current Revora project.
+
+The current landing page is acceptable, but this is NOT the primary thing I wanted to build right now.
+
+I want you to build the CORE CONNECTIONS CENTER of Revora.
+
+Revora is an AI Revenue OS for businesses that sell through Instagram, WhatsApp, websites, Shopify and other channels.
+
+The central concept is:
+
+CONNECTED CHANNELS
+        ↓
+CUSTOMER MESSAGES / ORDERS / EVENTS
+        ↓
+REVORA DATA LAYER
+        ↓
+AI CUSTOMER + SALES INTELLIGENCE
+        ↓
+REVENUE MANAGEMENT
+
+Build the Connections system as a real product feature, not a visual mockup.
+
+==================================================
+1. CREATE A CONNECTIONS PAGE
+==================================================
+
+Add a prominent "Connections" item to the authenticated sidebar.
+
+Route:
+
+/connections
+
+The page should be a polished integration management center.
+
+Header:
+
+"Connect your business"
+
+Subtitle:
+
+"Connect the channels where your customers discover, message and buy from you."
+
+Show connection cards for:
+
+1. Instagram
+2. WhatsApp Business
+3. Website
+4. Shopify
+5. WooCommerce
+6. CSV / Excel
+7. Manual Import
+
+Each connection should have:
+
+- Platform icon
+- Platform name
+- Description
+- Connection status
+- Connect button
+- Settings button when connected
+- Disconnect button
+- Last synchronized timestamp
+- Data types available
+- Sync status
+
+==================================================
+2. CONNECTION STATES
+==================================================
+
+Every integration must support these states:
+
+NOT_CONNECTED
+CONNECTING
+CONNECTED
+SYNCING
+SYNCED
+ERROR
+DISCONNECTED
+
+Use clear visual status indicators.
+
+Example:
+
+Instagram
+● Connected
+
+Last sync:
+2 minutes ago
+
+Data:
+✓ Messages
+✓ Customer profiles
+✓ Lead activity
+
+[Manage] [Sync now]
+
+==================================================
+3. INSTAGRAM CONNECTION
+==================================================
+
+Build the complete UI and architecture for an Instagram connection.
+
+Do NOT fake a successful Instagram connection.
+
+The Connect button should begin a proper integration flow.
+
+Prepare the application for the official Meta/Instagram OAuth flow.
+
+Connection configuration should support:
+
+- account ID
+- access token reference
+- connection status
+- connected_at
+- last_sync_at
+- error status
+- scopes/permissions
+- webhook status
+
+IMPORTANT:
+
+Never expose access tokens in the frontend.
+
+Never hardcode credentials.
+
+Do not use scraping.
+
+Use official APIs only.
+
+If actual Meta credentials are not available, build the OAuth flow interface and clearly show that credentials/configuration are required.
+
+==================================================
+4. WHATSAPP BUSINESS CONNECTION
+==================================================
+
+Create the same architecture for WhatsApp Business.
+
+Show:
+
+WhatsApp Business
+
+"Connect your WhatsApp Business account to capture customer conversations and sales opportunities."
+
+Support the future Meta Cloud API architecture.
+
+Configuration should support:
+
+- business account ID
+- phone number ID
+- connection status
+- webhook status
+- last sync
+- error state
+
+Do not pretend the connection is live without real credentials.
+
+==================================================
+5. WEBSITE CONNECTION
+==================================================
+
+Create a Website connection.
+
+This should be easier than the social integrations.
+
+Merchant enters:
+
+Website URL
+
+Then Revora provides a future:
+
+"Install Revora Website Widget"
+
+section.
+
+Show:
+
+Website URL
+Connection status
+Tracking status
+Last event received
+
+Also provide a generated placeholder installation snippet UI.
+
+Do NOT claim the website is connected unless an actual event has been received.
+
+==================================================
+6. SHOPIFY CONNECTION
+==================================================
+
+Create Shopify integration UI.
+
+Show:
+
+Shopify
+
+"Connect your Shopify store to synchronize customers, products and orders."
+
+Connection flow should be architected around OAuth.
+
+After connection, show:
+
+✓ Customers
+✓ Products
+✓ Orders
+✓ Payments/order financial data where available
+
+Include:
+
+Store URL
+Connection status
+Last synchronization
+Sync now
+Disconnect
+
+Do not use fake API data.
+
+==================================================
+7. WOOCOMMERCE
+==================================================
+
+Create WooCommerce connection UI.
+
+Fields:
+
+Store URL
+Consumer key
+Consumer secret
+
+Never display secrets after saving.
+
+Show connection test status.
+
+==================================================
+8. CSV / EXCEL IMPORT
+==================================================
+
+This one should actually work.
+
+Create an import wizard:
+
+Step 1:
+Upload CSV/XLSX
+
+Step 2:
+Detect columns
+
+Step 3:
+Map columns
+
+Example:
+
+Customer Name → customer_name
+Phone → phone
+Product → product
+Order Value → order_value
+Date → order_date
+
+Step 4:
+Validate
+
+Step 5:
+Import
+
+Step 6:
+Show results
+
+Example:
+
+Imported:
+247 customers
+83 orders
+₹4,82,000 revenue
+
+Failed:
+3 rows
+
+Allow downloading an error report.
+
+==================================================
+9. MANUAL IMPORT
+==================================================
+
+Create a simple form where merchants can manually enter:
+
+Customer
+Product
+Order value
+Channel
+Order date
+Status
+
+This is important for the MVP because merchants should be able to use Revora before connecting external platforms.
+
+==================================================
+10. CONNECTION DATABASE
+==================================================
+
+Create a proper Supabase database structure.
+
+Create:
+
+organizations
+
+profiles
+
+memberships
+
+connections
+
+connection_events
+
+sync_jobs
+
+integration_credentials_metadata
+
+Important:
+
+DO NOT store raw access tokens in normal frontend-readable tables.
+
+Use secure server-side handling for secrets.
+
+connections should include:
+
+id
+organization_id
+provider
+status
+external_account_id
+external_account_name
+connected_at
+last_sync_at
+last_success_at
+last_error
+created_at
+updated_at
+
+Add indexes.
+
+Use UUIDs.
+
+==================================================
+11. MULTI-TENANT SECURITY
+==================================================
+
+Every connection belongs to exactly one organization.
+
+Implement Supabase Row Level Security.
+
+Users must only be able to see connections belonging to their organization.
+
+Never trust organization_id supplied by the frontend.
+
+==================================================
+12. CONNECTION OVERVIEW DASHBOARD
+==================================================
+
+At the top of the Connections page show:
+
+Connected:
+2
+
+Needs attention:
+1
+
+Last synchronization:
+5 minutes ago
+
+Total customer records:
+1,284
+
+Total orders:
+347
+
+Then show:
+
+"Your Revenue Data Network"
+
+with a visual flow:
+
+Instagram ─────┐
+WhatsApp ──────┤
+Website ───────┤
+Shopify ───────┼──→ REVORA DATA LAYER ──→ AI INTELLIGENCE
+CSV ───────────┤
+Manual ────────┘
+
+Make this visually impressive.
+
+==================================================
+13. CONNECTION DETAIL PAGE
+==================================================
+
+Clicking an integration should open:
+
+/connections/:provider
+
+Show:
+
+Connection status
+Account information
+Permissions
+Data being synchronized
+Last synchronization
+Sync history
+Errors
+Webhook status
+Data statistics
+
+Actions:
+
+Sync now
+Reconnect
+Disconnect
+
+==================================================
+14. SYNC ACTIVITY
+==================================================
+
+Create a synchronization activity section.
+
+Example:
+
+Instagram
+✓ Messages synchronized
+✓ 42 customers processed
+✓ 17 new leads detected
+
+Shopify
+✓ 12 new orders
+✓ 8 customer records updated
+
+Use timestamps.
+
+Prepare the architecture for real background synchronization later.
+
+==================================================
+15. WEBHOOK ARCHITECTURE
+==================================================
+
+Create backend-ready architecture for:
+
+POST /api/v1/webhooks/:provider
+
+The system should eventually:
+
+Receive webhook
+→ Verify signature
+→ Store event
+→ Deduplicate event
+→ Queue processing
+→ Normalize data
+→ Save to Revora database
+→ Trigger AI processing
+
+Do NOT implement fake webhook success.
+
+Create clean interfaces/services so real providers can be plugged in later.
+
+==================================================
+16. NORMALIZED DATA MODEL
+==================================================
+
+This is extremely important.
+
+Different platforms should eventually feed into the same Revora entities.
+
+For example:
+
+Instagram customer
+WhatsApp customer
+Shopify customer
+Website customer
+
+should all map into:
+
+REVORA CUSTOMER
+
+Likewise:
+
+Instagram inquiry
+WhatsApp inquiry
+Website inquiry
+
+should map into:
+
+REVORA LEAD
+
+And:
+
+Shopify order
+Website order
+Manual order
+
+should map into:
+
+REVORA ORDER
+
+Create service-layer abstractions for this.
+
+==================================================
+17. CONNECTION ONBOARDING
+==================================================
+
+After a new merchant signs up, onboarding should ask:
+
+"Where do you sell?"
+
+Options:
+
+☐ Instagram
+☐ WhatsApp
+☐ Website
+☐ Shopify
+☐ WooCommerce
+☐ Other
+
+Then recommend:
+
+"Connect your most important sales channel first."
+
+After onboarding, take them directly to Connections.
+
+==================================================
+18. DO NOT BUILD YET
+==================================================
+
+Do NOT build:
+
+- Autonomous AI agent
+- AI marketing campaigns
+- Automatic Instagram posting
+- Automatic WhatsApp messaging
+- Advanced forecasting
+- Full CRM
+- Complex accounting
+- Inventory
+- Shipping
+- Payroll
+- Mobile app
+
+The immediate priority is:
+
+CONNECTIONS → DATA INGESTION → NORMALIZATION
+
+==================================================
+19. IMPORTANT
+==================================================
+
+Do not simply create beautiful mockups.
+
+Implement the database schema, routes, states, CRUD and architecture needed for genuine integrations.
+
+Where external credentials are unavailable, create a real integration-ready architecture but clearly mark the connection as "Not configured".
+
+Never fabricate connected accounts, synchronization results or API responses.
+
+==================================================
+20. FINAL UX
+==================================================
+
+The main Revora experience should eventually become:
+
+SIGN UP
+↓
+CREATE BUSINESS
+↓
+CONNECT CHANNELS
+↓
+IMPORT / SYNCHRONIZE DATA
+↓
+REVORA NORMALIZES DATA
+↓
+CUSTOMERS + LEADS + ORDERS
+↓
+AI UNDERSTANDS CUSTOMERS
+↓
+REVENUE DASHBOARD
+↓
+AI GROWTH AGENT
+
+Build the CONNECTIONS portion of this architecture now.
+
+Keep the existing Revora branding, but make the authenticated Connections experience the primary development priority.
