@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# Editor / OS
+.vscode/
+.DS_Store
+
+# Misc project scripts
+start-dev.vbs
+
+# Local data
+api-server/data/
+revora/data/
+
+# Keep api-server/dist tracked (committed build output)
+!api-server/dist/
