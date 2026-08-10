@@ -45,7 +45,7 @@ const sqlite = {
   execute(opts: { sql: string; args?: unknown[] }) {
     const stmt = _db.prepare(opts.sql);
     if (opts.sql.trimStart().toUpperCase().startsWith("SELECT")) {
-      const rows = (stmt.all(...(opts.args ?? [])) as Record<string, unknown>[]).map(row => {
+      const rows = (stmt.all(...((opts.args ?? []) as any[])) as Record<string, unknown>[]).map(row => {
         const cleaned: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(row)) {
           if (key.startsWith("__")) continue;
@@ -55,7 +55,7 @@ const sqlite = {
       });
       return { rows, columns: Object.keys(rows[0] ?? {}) };
     }
-    const changes = stmt.run(...(opts.args ?? []));
+    const changes = stmt.run(...((opts.args ?? []) as any[]));
     return { rows: [], columns: [], lastInsertRowid: _db.prepare("SELECT last_insert_rowid() as id").get()?.id as number | undefined, changes };
   },
   executeMultiple(sql: string) {

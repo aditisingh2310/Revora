@@ -2,68 +2,111 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --color-border: hsl(214.3 31.8% 91.4%);
-  --color-input: hsl(214.3 31.8% 91.4%);
-  --color-ring: hsl(164 55% 35%);
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(222.2 84% 4.9%);
-  --color-primary: hsl(164 55% 35%);
-  --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(210 40% 96.1%);
-  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --font-display: "Sora", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-border: hsl(0 0% 12%);
+  --color-input: hsl(0 0% 12%);
+  --color-ring: hsl(0 0% 100%);
+  --color-background: hsl(0 0% 0%);
+  --color-foreground: hsl(0 0% 100%);
+  --color-primary: hsl(0 0% 100%);
+  --color-primary-foreground: hsl(0 0% 0%);
+  --color-secondary: hsl(0 0% 8%);
+  --color-secondary-foreground: hsl(0 0% 100%);
   --color-destructive: hsl(0 84.2% 60.2%);
-  --color-destructive-foreground: hsl(210 40% 98%);
-  --color-muted: hsl(210 40% 96.1%);
-  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
-  --color-accent: hsl(210 40% 96.1%);
-  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(222.2 84% 4.9%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(222.2 84% 4.9%);
-  --color-sidebar: hsl(211 39% 15%);
-  --color-sidebar-foreground: hsl(210 40% 98%);
-  --color-sidebar-primary: hsl(164 55% 35%);
-  --color-sidebar-primary-foreground: hsl(0 0% 100%);
-  --color-sidebar-accent: hsl(210 40% 96.1% / 0.1);
-  --color-sidebar-accent-foreground: hsl(210 40% 98%);
-  --color-sidebar-border: hsl(210 40% 96.1% / 0.1);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-muted: hsl(0 0% 8%);
+  --color-muted-foreground: hsl(0 0% 63%);
+  --color-accent: hsl(0 0% 100%);
+  --color-accent-foreground: hsl(0 0% 0%);
+  --color-card: hsl(0 0% 4%);
+  --color-card-foreground: hsl(0 0% 100%);
+  --color-popover: hsl(0 0% 4%);
+  --color-popover-foreground: hsl(0 0% 100%);
+}
+
+/* ---------- Premium Clean Monochrome Theme System ---------- */
+
+@theme {
+  --color-surface-0: #000000;
+  --color-surface-1: #09090b;
+  --color-surface-2: #121215;
+  --color-surface-3: #1a1a1f;
+  
+  --color-edge: rgba(255, 255, 255, 0.08);
+  --color-edge-strong: rgba(255, 255, 255, 0.16);
+  --color-edge-active: rgba(255, 255, 255, 0.3);
+  
+  --color-text-1: #ffffff;
+  --color-text-2: #a1a1aa;
+  --color-text-3: #71717a;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--color-edge);
   }
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background-color: var(--color-surface-0);
+    color: var(--color-text-1);
     font-family: var(--font-sans);
+    overflow-x: hidden;
   }
 }
 
-@layer utilities {
-  .revora-noise {
-    background-image: radial-gradient(circle at 1px 1px, hsl(210 40% 96.1% / 0.15) 1px, transparent 0);
-    background-size: 24px 24px;
+@layer components {
+  .noise {
+    position: relative;
   }
-  .revora-pulse {
-    animation: revora-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  .noise::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    pointer-events: none;
+    z-index: 0;
   }
-  .revora-rise {
-    animation: revora-rise 0.5s ease-out;
+
+  .text-monochrome-gradient {
+    background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  .revora-delay-1 { animation-delay: 0.1s; }
-  .revora-delay-2 { animation-delay: 0.2s; }
-  .revora-delay-3 { animation-delay: 0.3s; }
-  .revora-delay-4 { animation-delay: 0.4s; }
+
+  .glass-panel {
+    background: rgba(9, 9, 11, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Grid Mesh Overlay Background */
+  .grid-pattern {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  }
 }
 
-@keyframes revora-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
 }
-
-@keyframes revora-rise {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #1a1a1f;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #27272a;
 }
