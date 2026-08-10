@@ -10,6 +10,9 @@ dist/
 
 # Logs
 *.log
+css-output.txt
+page-output.html
+revora/true
 
 # Editor / OS
 .vscode/

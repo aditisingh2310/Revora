@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const sora = Sora({ subsets: ["latin"], variable: "--font-sora", weight: ["600", "700", "800"] });
 
 export const metadata: Metadata = {
-  title: "Revora Connections",
-  description: "Revora - AI Revenue OS for connected businesses",
+  title: "Revora — One inbox for every customer conversation",
+  description:
+    "Revora unifies Telegram, WhatsApp, Instagram and more into a single, multi-tenant inbox your team can actually run. Self-hostable, real-time, and built for connected businesses.",
 };
 
 export default function RootLayout({
@@ -16,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${sora.variable}`}>
       <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>
