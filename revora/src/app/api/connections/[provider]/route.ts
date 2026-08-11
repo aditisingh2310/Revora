@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { sqlite } from "@workspace/db";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { resolveOrganizationId } from "@/lib/tenant";
 import { getProviderCounts } from "@/lib/revenue-data";
+import { parseJsonColumn } from "@/lib/row-helpers";
 import type { ConnectionProvider } from "../types";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,7 @@ function syntheticConnectionId(provider: ConnectionProvider): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-${((parseInt(hex.slice(16, 18), 16) & 0x3f) | 0x80).toString(16)}${hex.slice(18, 20)}-${hex.slice(20)}`;
 }
 
-function serializeConnection(provider: ConnectionProvider, record: Record<string, unknown> | undefined) {
+function serializeConnection(provider: ConnectionProvider, record: Record<string, unknown> | null | undefined) {
   const catalog = connectionCatalog.find(c => c.provider === provider)!;
   const now = new Date().toISOString();
   if (!record) {
@@ -57,7 +58,7 @@ function serializeConnection(provider: ConnectionProvider, record: Record<string
       updatedAt: now,
     };
   }
-  const config = record.configuration ? JSON.parse(String(record.configuration)) : {};
+  const config = parseJsonColumn(record.configuration);
   return {
     id: String(record.id),
     provider,
@@ -83,6 +84,17 @@ interface RouteContext {
   params: Promise<{ provider: string }>;
 }
 
+async function loadConnection(organizationId: string, provider: string) {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("connections")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("provider", provider)
+    .maybeSingle();
+  return data as Record<string, unknown> | null;
+}
+
 export async function GET(_request: Request, { params }: RouteContext) {
   const { provider: raw } = await params;
   if (!PROVIDERS.includes(raw as ConnectionProvider)) {
@@ -91,44 +103,30 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const provider = raw as ConnectionProvider;
   const organizationId = await resolveOrganizationId(_request);
 
-  const recordResult = await sqlite.execute({
-    sql: "SELECT * FROM connections WHERE organization_id = ? AND provider = ? LIMIT 1",
-    args: [organizationId, provider],
-  });
-  const record = recordResult.rows[0] as Record<string, unknown> | undefined;
+  const record = await loadConnection(organizationId, provider);
 
-  const activityResult = await sqlite.execute({
-    sql: `SELECT s.id, c.provider, s.status, s.error, s.created_at, s.completed_at
-          FROM sync_jobs s
-          INNER JOIN connections c ON s.connection_id = c.id
-          WHERE s.organization_id = ? AND c.provider = ?
-          ORDER BY s.created_at DESC
-          LIMIT 12`,
-    args: [organizationId, provider],
-  });
-
+  const activity = await getActivity(organizationId, provider);
   const counts = await getProviderCounts(organizationId, provider);
-  const eventCount = record ? await sqlite.execute({
-    sql: "SELECT COUNT(*) as count FROM connection_events WHERE connection_id = ?",
-    args: [String(record.id)],
-  }) : null;
+  const eventCount = record
+    ? await (async () => {
+        const supabase = getSupabaseAdmin();
+        const { count } = await supabase
+          .from("connection_events")
+          .select("*", { count: "exact", head: true })
+          .eq("connection_id", String(record.id));
+        return Number(count ?? 0);
+      })()
+    : 0;
 
   return NextResponse.json({
     connection: serializeConnection(provider, record),
     syncJobs: [],
-    activity: activityResult.rows.map(job => ({
-      id: String(job.id),
-      provider: String(job.provider),
-      title: job.status === "FAILED" ? "Synchronization needs attention" : job.status === "SUCCEEDED" ? "Synchronization completed" : "Synchronization requested",
-      detail: job.error ? String(job.error) : `Sync job is ${String(job.status).toLowerCase()}.`,
-      status: job.status === "FAILED" ? "error" : "info",
-      createdAt: new Date(String(job.created_at)).toISOString(),
-    })),
+    activity,
     statistics: {
       customers: counts.customers,
       orders: counts.orders,
       leads: 0,
-      events: eventCount ? Number(eventCount.rows[0]?.count ?? 0) : 0,
+      events: eventCount,
     },
   });
 }
@@ -142,13 +140,10 @@ export async function POST(request: Request, { params }: RouteContext) {
   const body = await request.json().catch(() => ({}));
 
   const organizationId = await resolveOrganizationId(request);
-  const existingResult = await sqlite.execute({
-    sql: "SELECT * FROM connections WHERE organization_id = ? AND provider = ? LIMIT 1",
-    args: [organizationId, provider],
-  });
-  const existing = existingResult.rows[0] as Record<string, unknown> | undefined;
+  const supabase = getSupabaseAdmin();
+  const existing = await loadConnection(organizationId, provider);
 
-  const existingConfig = existing?.configuration ? JSON.parse(String(existing.configuration)) : {};
+  const existingConfig = existing?.configuration ? parseJsonColumn(existing.configuration) : {};
   const configuration = {
     ...existingConfig,
     ...(body.configuration ?? {}),
@@ -156,43 +151,33 @@ export async function POST(request: Request, { params }: RouteContext) {
   };
 
   if (existing) {
-    await sqlite.execute({
-      sql: `UPDATE connections SET
-            status = ?, external_account_id = ?, external_account_name = ?,
-            configuration = ?, last_error = ?, updated_at = ?
-            WHERE id = ?`,
-      args: [
-        "NOT_CONNECTED",
-        body.accountId ?? existing.external_account_id ?? null,
-        body.externalAccountName ?? existing.external_account_name ?? null,
-        JSON.stringify(configuration),
-        "Official provider credentials and OAuth configuration are required before this channel can connect.",
-        new Date().toISOString(),
-        String(existing.id),
-      ],
-    });
+    const { error } = await supabase
+      .from("connections")
+      .update({
+        status: "NOT_CONNECTED",
+        external_account_id: body.accountId ?? existing.external_account_id ?? null,
+        external_account_name: body.externalAccountName ?? existing.external_account_name ?? null,
+        configuration,
+        last_error: "Official provider credentials and OAuth configuration are required before this channel can connect.",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", String(existing.id));
+    if (error) throw new Error(`Failed to update connection: ${error.message}`);
   } else {
-    await sqlite.execute({
-      sql: `INSERT INTO connections
-            (organization_id, provider, status, external_account_id, external_account_name, configuration, last_error)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        organizationId,
-        provider,
-        "NOT_CONNECTED",
-        body.accountId ?? null,
-        body.externalAccountName ?? null,
-        JSON.stringify(configuration),
-        "Official provider credentials and OAuth configuration are required before this channel can connect.",
-      ],
+    const { error } = await supabase.from("connections").insert({
+      organization_id: organizationId,
+      provider,
+      status: "NOT_CONNECTED",
+      external_account_id: body.accountId ?? null,
+      external_account_name: body.externalAccountName ?? null,
+      configuration,
+      last_error: "Official provider credentials and OAuth configuration are required before this channel can connect.",
     });
+    if (error) throw new Error(`Failed to create connection: ${error.message}`);
   }
 
-  const updatedResult = await sqlite.execute({
-    sql: "SELECT * FROM connections WHERE organization_id = ? AND provider = ? LIMIT 1",
-    args: [organizationId, provider],
-  });
-  return NextResponse.json(serializeConnection(provider, updatedResult.rows[0] as Record<string, unknown>), { status: 202 });
+  const updated = await loadConnection(organizationId, provider);
+  return NextResponse.json(serializeConnection(provider, updated), { status: 202 });
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
@@ -202,25 +187,56 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   }
   const provider = raw as ConnectionProvider;
   const organizationId = await resolveOrganizationId(_request);
-
-  const existingResult = await sqlite.execute({
-    sql: "SELECT * FROM connections WHERE organization_id = ? AND provider = ? LIMIT 1",
-    args: [organizationId, provider],
-  });
-  const existing = existingResult.rows[0] as Record<string, unknown> | undefined;
+  const supabase = getSupabaseAdmin();
+  const existing = await loadConnection(organizationId, provider);
 
   if (!existing) {
     return NextResponse.json(serializeConnection(provider, undefined));
   }
 
-  await sqlite.execute({
-    sql: `UPDATE connections SET status = ?, last_error = NULL, external_account_id = NULL, external_account_name = NULL, connected_at = NULL, updated_at = ? WHERE id = ?`,
-    args: ["DISCONNECTED", new Date().toISOString(), String(existing.id)],
-  });
+  const { error } = await supabase
+    .from("connections")
+    .update({
+      status: "DISCONNECTED",
+      last_error: null,
+      external_account_id: null,
+      external_account_name: null,
+      connected_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", String(existing.id));
+  if (error) throw new Error(`Failed to disconnect: ${error.message}`);
 
-  const updatedResult = await sqlite.execute({
-    sql: "SELECT * FROM connections WHERE organization_id = ? AND provider = ? LIMIT 1",
-    args: [organizationId, provider],
-  });
-  return NextResponse.json(serializeConnection(provider, updatedResult.rows[0] as Record<string, unknown>));
+  const updated = await loadConnection(organizationId, provider);
+  return NextResponse.json(serializeConnection(provider, updated));
+}
+
+async function getActivity(organizationId: string, provider: string) {
+  const supabase = getSupabaseAdmin();
+  const { data: jobs } = await supabase
+    .from("sync_jobs")
+    .select("id, connection_id, status, error, created_at, completed_at")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  const connIds = (jobs ?? []).map(j => j.connection_id);
+  const { data: conns } = await supabase
+    .from("connections")
+    .select("id, provider")
+    .in("id", connIds.length ? connIds : ["00000000-0000-0000-0000-000000000000"]);
+
+  const providerById = new Map<string, string>((conns ?? []).map(c => [c.id, c.provider]));
+  const targetProvider = provider;
+
+  return (jobs ?? [])
+    .filter(job => providerById.get(job.connection_id) === targetProvider)
+    .map(job => ({
+      id: String(job.id),
+      provider: targetProvider,
+      title: job.status === "FAILED" ? "Synchronization needs attention" : job.status === "SUCCEEDED" ? "Synchronization completed" : "Synchronization requested",
+      detail: job.error ? String(job.error) : `Sync job is ${String(job.status).toLowerCase()}.`,
+      status: job.status === "FAILED" ? "error" : "info",
+      createdAt: new Date(String(job.created_at)).toISOString(),
+    }));
 }

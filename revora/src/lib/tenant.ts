@@ -1,22 +1,17 @@
-import { sqlite, ensureSchema } from "@workspace/db";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 const DEVELOPMENT_ORGANIZATION_ID = "00000000-0000-4000-8000-000000000001";
-
-let initialized = false;
 
 export async function resolveOrganizationId(_request: Request): Promise<string> {
   const organizationId =
     process.env.REVORA_DEMO_ORGANIZATION_ID ?? DEVELOPMENT_ORGANIZATION_ID;
 
-  if (!initialized) {
-    ensureSchema();
-    initialized = true;
-  }
-
-  await sqlite.execute({
-    sql: "INSERT OR IGNORE INTO organizations (id, name) VALUES (?, ?)",
-    args: [organizationId, "Revora workspace"],
-  });
+  const supabase = getSupabaseAdmin();
+  // Idempotent: insert the dev org on first use, no-op afterwards.
+  const { error } = await supabase
+    .from("organizations")
+    .upsert({ id: organizationId, name: "Revora workspace" }, { onConflict: "id" });
+  if (error) throw new Error(`Failed to resolve organization: ${error.message}`);
 
   return organizationId;
 }

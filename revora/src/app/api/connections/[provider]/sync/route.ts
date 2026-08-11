@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sqlite } from "@workspace/db";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { resolveOrganizationId } from "@/lib/tenant";
 import { PROVIDERS } from "../../types";
 
@@ -15,35 +15,53 @@ export async function POST(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
   }
   const organizationId = await resolveOrganizationId(_request);
+  const supabase = getSupabaseAdmin();
 
-  const existingResult = await sqlite.execute({
-    sql: "SELECT id FROM connections WHERE organization_id = ? AND provider = ? LIMIT 1",
-    args: [organizationId, raw],
-  });
-  const existing = existingResult.rows[0] as unknown as { id: string } | undefined;
+  const { data: existing } = await supabase
+    .from("connections")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .eq("provider", raw)
+    .maybeSingle();
 
   let connectionId: string;
   if (existing) {
-    connectionId = String(existing.id);
+    connectionId = existing.id;
   } else {
-    const result = await sqlite.execute({
-      sql: "INSERT INTO connections (organization_id, provider, status, last_error) VALUES (?, ?, ?, ?)",
-      args: [organizationId, raw, "NOT_CONNECTED", "Connect this provider before requesting synchronization."],
-    });
-    connectionId = String(result.lastInsertRowid);
+    const { data: inserted, error } = await supabase
+      .from("connections")
+      .insert({
+        organization_id: organizationId,
+        provider: raw,
+        status: "NOT_CONNECTED",
+        last_error: "Connect this provider before requesting synchronization.",
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(`Failed to create connection: ${error.message}`);
+    connectionId = inserted!.id;
   }
 
-  const result = await sqlite.execute({
-    sql: "INSERT INTO sync_jobs (organization_id, connection_id, status, completed_at, error) VALUES (?, ?, ?, ?, ?)",
-    args: [organizationId, connectionId, "FAILED", new Date().toISOString(), "Synchronization is unavailable until official provider credentials are configured."],
-  });
+  const now = new Date().toISOString();
+  const { data: job, error } = await supabase
+    .from("sync_jobs")
+    .insert({
+      organization_id: organizationId,
+      connection_id: connectionId,
+      status: "FAILED",
+      completed_at: now,
+      error: "Synchronization is unavailable until official provider credentials are configured.",
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(`Failed to create sync job: ${error.message}`);
 
   return NextResponse.json({
-    id: String(result.lastInsertRowid),
+    id: job.id,
     provider: raw,
     status: "FAILED",
-    createdAt: new Date().toISOString(),
-    completedAt: new Date().toISOString(),
+    createdAt: now,
+    completedAt: now,
     error: "Synchronization is unavailable until official provider credentials are configured.",
   }, { status: 202 });
 }

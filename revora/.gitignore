@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+dist/
+
+# Local data (SQLite removed; Supabase is the data layer now)
+data/
+
+# Secrets — never commit. .env.local holds SUPABASE_SERVICE_ROLE_KEY etc.
+.env
+.env.local
+.env*.local
+
+# Logs
+*.log
+.DS_Store

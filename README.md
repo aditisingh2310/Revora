@@ -11,7 +11,7 @@ keep everything in sync.
 ![Revora](https://img.shields.io/badge/Revora-revenue--workspace-blueviolet)
 ![pnpm](https://img.shields.io/badge/package%20manager-pnpm-F69220)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
-![Express](https://img.shields.io/badge/Express-5-259DFF)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E)
 
 ---
 
@@ -34,65 +34,71 @@ keep everything in sync.
 
 ## 🧱 Architecture
 
-Revora is a **pnpm workspace monorepo** with three layers: a Next.js web app,
-an Express API server, and a set of shared workspace libraries.
+Revora is a **pnpm workspace monorepo** with a single full-stack app. `revora/`
+is both the UI and the backend: Next.js App Router **pages** render the product,
+and Next.js **route handlers** (`app/api/*`) are the only API server. All data
+lives in **one Supabase (Postgres) project** — the former local SQLite store and
+the Telegram/comms tables are now unified there.
 
 ```
                           ┌─────────────────────────────┐
-                          │         Client (browser)     │
-                          │      Next.js 15  (revora)     │
-                          │  /connections · /imports ·    │
-                          │     /providers · /activity    │
+                          │      Browser (Revora UI)     │
+                          │  /connections · /import/* ·  │
+                          │     /onboarding · /activity  │
                           └───────────────┬───────────────┘
-                                          │  REST (fetch + React Query)
+                                          │  fetch + React Query
                                           ▼
                           ┌─────────────────────────────┐
-                          │      Express 5 API Server    │
-                          │        (@workspace/api-server)│
-                          │  /api/health                 │
-                          │  /api/connections            │
-                          │  /api/imports                │
-                          │  /api/activity               │
-                          │  /api/webhooks  ── verify ──► │
-                          └──────┬───────────┬───────────┘
-                                 │           │
-              ┌──────────────────┘           └──────────────────┐
-              ▼                                                 ▼
-   ┌──────────────────────┐                        ┌──────────────────────┐
-   │  Shared libraries    │                        │  Provider webhooks   │
-   │  @workspace/db       │                        │  (Instagram, WA,     │
-   │  @workspace/api-zod  │                        │   Shopify, WC ...)   │
-   │  @workspace/         │                        │  RevenueNormalizer   │
-   │   api-client-react   │                        └──────────┬───────────┘
-   └──────────┬───────────┘                                   │
-              │                                                │
-              ▼                                                ▼
-   ┌──────────────────────┐                        ┌──────────────────────┐
-   │  SQLite (node:sqlite)│ ◄───────────────────── │  Normalized revenue  │
-   │  Drizzle ORM         │      connection-events │  + connection events │
-   └──────────────────────┘                        └──────────────────────┘
+                          │   Next.js 15 (revora)         │
+                          │   app/  (pages)               │
+                          │   app/api/  (route handlers)  │
+                          │     /api/connections          │
+                          │     /api/imports              │
+                          │     /api/activity             │
+                          │     /api/webhooks/telegram/*  │
+                          │   lib/comms/  (Telegram adapter│
+                          │     + inbox/contact/message   │
+                          │     services & repositories)  │
+                          └───────────────┬───────────────┘
+                                          │  @supabase/supabase-js
+                                          ▼
+                          ┌─────────────────────────────┐
+                          │   ONE Supabase (Postgres)    │
+                          │   organizations, connections,│
+                          │   customers, orders,         │
+                          │   sync_jobs, connection_events│
+                          │   shops, inboxes,            │
+                          │   channel_connections,       │
+                          │   contacts, messages         │
+                          └─────────────────────────────┘
 ```
 
 ### Workspace packages
 
 | Package | Purpose |
 | --- | --- |
-| `revora/` | Next.js 15 web app (UI, onboarding, dashboards) |
-| `api-server/` | Express 5 REST API; routes + webhook ingestion |
-| `lib/db/` | Drizzle schema, SQLite access, provider catalog |
+| `revora/` | Next.js 15 full-stack app — UI **and** the single API backend (route handlers) |
+| `revora/src/lib/comms/` | Channel-adapter abstraction, Telegram adapter, inbox/contact/message services & repositories |
+| `revora/supabase/migrations/` | SQL migrations for the unified Supabase schema |
 | `lib/api-zod/` | Shared Zod request/response schemas |
 | `lib/api-client-react/` | Typed React Query client for the frontend |
 | `scripts/` | Workspace tooling |
 
 ### Data flow
 
-1. A **provider webhook** arrives at `/api/webhooks`.
-2. A `ProviderWebhookVerifier` checks the signature — unconfigured providers
-   fail closed (`UnconfiguredWebhookVerifier` always returns `false`).
-3. The verified event is passed to a `RevenueNormalizer` and stored as a
-   **connection event** in SQLite.
-4. The web app reads normalized revenue + connection data through the API and
-   renders it in the connections overview and activity views.
+1. A **provider webhook** (e.g. `POST /api/webhooks/telegram/:connectionId`)
+   arrives. The Telegram adapter translates the raw payload into the universal
+   `NormalizedMessage` — the core never sees Telegram JSON.
+2. The route resolves `channel_connection → inbox → shop` from **our** database
+   (never the payload) and upserts a contact, then stores the message
+   idempotently (unique constraint on `channel_connection_id,
+   external_message_id`).
+3. Revenue imports (manual / CSV) write `customers` + `orders` rows.
+4. The web app reads normalized data through the API and renders the
+   connections overview and activity views.
+
+Retired: the old `api-server` (Express), `mockup-sandbox`, and `lib/db` (SQLite)
+were folded into `revora` and the Supabase-backed data layer.
 
 ---
 
@@ -105,9 +111,8 @@ an Express API server, and a set of shared workspace libraries.
 # 1. install dependencies
 pnpm install
 
-# 2. run the web app + api in dev
-pnpm dev          # → web app (Next.js)
-                 # → api server (Express)
+# 2. run the full-stack app in dev (UI + API routes in one process)
+pnpm dev          # → Next.js (UI + API route handlers)
 
 # 3. build everything
 pnpm build
@@ -116,7 +121,10 @@ pnpm build
 pnpm typecheck
 ```
 
-The web app redirects from `/` to `/connections` on boot.
+The app requires a Supabase project. Copy `revora/.env.local` (or set
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`) and apply the migrations in
+`revora/supabase/migrations` to that project. The web app redirects from `/` to
+`/connections` on boot.
 
 ---
 
