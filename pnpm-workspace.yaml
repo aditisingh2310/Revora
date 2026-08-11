@@ -36,10 +36,10 @@ minimumReleaseAgeExclude:
 
 packages:
   - artifacts/*
-  - lib/*
+  - lib/api-zod
+  - lib/api-client-react
   - lib/integrations/*
   - scripts
-  - api-server
   - revora
 
 catalog:

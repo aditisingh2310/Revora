@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { sqlite } from "@workspace/db";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { resolveOrganizationId } from "@/lib/tenant";
+import { parseJsonColumn } from "@/lib/row-helpers";
 import { PROVIDERS } from "../../types";
 
 export const dynamic = "force-dynamic";
@@ -20,13 +21,16 @@ export async function POST(request: Request, { params }: RouteContext) {
   }
 
   const organizationId = await resolveOrganizationId(request);
-  const existingResult = await sqlite.execute({
-    sql: "SELECT * FROM connections WHERE organization_id = ? AND provider = ? LIMIT 1",
-    args: [organizationId, "website"],
-  });
-  const existing = existingResult.rows[0] as Record<string, unknown> | undefined;
-  const existingConfig = existing?.configuration ? JSON.parse(String(existing.configuration)) : {};
+  const supabase = getSupabaseAdmin();
 
+  const { data: existing } = await supabase
+    .from("connections")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("provider", "website")
+    .maybeSingle();
+
+  const existingConfig = existing?.configuration ? parseJsonColumn(existing.configuration) : {};
   const configuration = {
     ...existingConfig,
     websiteUrl: body.websiteUrl,
@@ -35,23 +39,41 @@ export async function POST(request: Request, { params }: RouteContext) {
   };
 
   if (existing) {
-    await sqlite.execute({
-      sql: `UPDATE connections SET configuration = ?, status = ?, external_account_name = ?, last_error = ?, updated_at = ? WHERE id = ?`,
-      args: [JSON.stringify(configuration), "NOT_CONNECTED", body.websiteUrl, "Waiting for the first verified website event.", new Date().toISOString(), String(existing.id)],
-    });
+    const { error } = await supabase
+      .from("connections")
+      .update({
+        configuration,
+        status: "NOT_CONNECTED",
+        external_account_name: body.websiteUrl,
+        last_error: "Waiting for the first verified website event.",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", String(existing.id));
+    if (error) throw new Error(`Failed to update website connection: ${error.message}`);
   } else {
-    await sqlite.execute({
-      sql: `INSERT INTO connections (organization_id, provider, status, external_account_name, configuration, last_error) VALUES (?, ?, ?, ?, ?, ?)`,
-      args: [organizationId, "website", "NOT_CONNECTED", body.websiteUrl, JSON.stringify(configuration), "Waiting for the first verified website event."],
+    const { error } = await supabase.from("connections").insert({
+      organization_id: organizationId,
+      provider: "website",
+      status: "NOT_CONNECTED",
+      external_account_name: body.websiteUrl,
+      configuration,
+      last_error: "Waiting for the first verified website event.",
     });
+    if (error) throw new Error(`Failed to create website connection: ${error.message}`);
   }
 
-  const updatedResult = await sqlite.execute({
-    sql: "SELECT * FROM connections WHERE organization_id = ? AND provider = ? LIMIT 1",
-    args: [organizationId, "website"],
-  });
-  const record = updatedResult.rows[0] as Record<string, unknown>;
-  const config = JSON.parse(String(record.configuration));
+  const { data: record, error: loadError } = await supabase
+    .from("connections")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("provider", "website")
+    .maybeSingle();
+  if (loadError) throw new Error(`Failed to load website connection: ${loadError.message}`);
+  if (!record) {
+    return NextResponse.json({ error: "Failed to load website connection" }, { status: 500 });
+  }
+
+  const config = parseJsonColumn(record.configuration);
 
   return NextResponse.json({
     id: String(record.id),

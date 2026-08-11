@@ -1,4 +1,4 @@
-import { sqlite } from "@workspace/db";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export type NormalizedRevenueRow = {
   customer: string;
@@ -46,6 +46,7 @@ export async function importNormalizedRows(
   rows: NormalizedRevenueRow[],
   source = "manual",
 ): Promise<ImportSummary> {
+  const supabase = getSupabaseAdmin();
   let importedCustomers = 0;
   let importedOrders = 0;
   let revenue = 0;
@@ -65,27 +66,47 @@ export async function importNormalizedRows(
       continue;
     }
 
-    const existingCustomer = await sqlite.execute({
-      sql: "SELECT * FROM customers WHERE organization_id = ? AND name = ? LIMIT 1",
-      args: [organizationId, row.customer],
-    });
+    const { data: existing } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("organization_id", organizationId)
+      .eq("name", row.customer)
+      .maybeSingle();
 
     let customerId: string;
-    if (existingCustomer.rows.length > 0) {
-      customerId = String(existingCustomer.rows[0].id);
+    if (existing) {
+      customerId = existing.id;
     } else {
-      const result = await sqlite.execute({
-        sql: "INSERT INTO customers (organization_id, external_source, name, phone, email) VALUES (?, ?, ?, ?, ?)",
-        args: [organizationId, source, row.customer, row.phone ?? null, row.email ?? null],
-      });
-      customerId = String(result.lastInsertRowid);
+      const { data: inserted, error } = await supabase
+        .from("customers")
+        .insert({
+          organization_id: organizationId,
+          external_source: source,
+          name: row.customer,
+          phone: row.phone ?? null,
+          email: row.email ?? null,
+          metadata: {},
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(`Failed to insert customer: ${error.message}`);
+      customerId = inserted!.id;
       importedCustomers += 1;
     }
 
-    await sqlite.execute({
-      sql: "INSERT INTO orders (organization_id, customer_id, external_source, product, order_value, channel, order_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      args: [organizationId, customerId, source, row.product, row.orderValue, row.channel, row.orderDate, row.status],
+    const { error: orderError } = await supabase.from("orders").insert({
+      organization_id: organizationId,
+      customer_id: customerId,
+      external_source: source,
+      product: row.product,
+      order_value: row.orderValue,
+      channel: row.channel,
+      order_date: row.orderDate,
+      status: row.status,
+      metadata: {},
     });
+    if (orderError) throw new Error(`Failed to insert order: ${orderError.message}`);
+
     importedOrders += 1;
     revenue += row.orderValue;
   }
@@ -100,25 +121,41 @@ export async function importNormalizedRows(
 }
 
 export async function getRevenueCounts(organizationId: string) {
-  const [customerCount, orderCount] = await Promise.all([
-    sqlite.execute({ sql: "SELECT COUNT(*) as count FROM customers WHERE organization_id = ?", args: [organizationId] }),
-    sqlite.execute({ sql: "SELECT COUNT(*) as count FROM orders WHERE organization_id = ?", args: [organizationId] }),
+  const supabase = getSupabaseAdmin();
+  const [customerResult, orderResult] = await Promise.all([
+    supabase
+      .from("customers")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId),
+    supabase
+      .from("orders")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId),
   ]);
 
   return {
-    customers: Number(customerCount.rows[0]?.count ?? 0),
-    orders: Number(orderCount.rows[0]?.count ?? 0),
+    customers: Number(customerResult.count ?? 0),
+    orders: Number(orderResult.count ?? 0),
   };
 }
 
 export async function getProviderCounts(organizationId: string, provider: string) {
-  const [customerCount, orderCount] = await Promise.all([
-    sqlite.execute({ sql: "SELECT COUNT(*) as count FROM customers WHERE organization_id = ? AND external_source = ?", args: [organizationId, provider] }),
-    sqlite.execute({ sql: "SELECT COUNT(*) as count FROM orders WHERE organization_id = ? AND external_source = ?", args: [organizationId, provider] }),
+  const supabase = getSupabaseAdmin();
+  const [customerResult, orderResult] = await Promise.all([
+    supabase
+      .from("customers")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("external_source", provider),
+    supabase
+      .from("orders")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("external_source", provider),
   ]);
 
   return {
-    customers: Number(customerCount.rows[0]?.count ?? 0),
-    orders: Number(orderCount.rows[0]?.count ?? 0),
+    customers: Number(customerResult.count ?? 0),
+    orders: Number(orderResult.count ?? 0),
   };
 }

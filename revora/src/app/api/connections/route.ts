@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { sqlite } from "@workspace/db";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { resolveOrganizationId } from "@/lib/tenant";
 import { getRevenueCounts } from "@/lib/revenue-data";
+import { parseJsonColumn } from "@/lib/row-helpers";
 import type { ConnectionProvider } from "./types";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,7 @@ function syntheticConnectionId(provider: ConnectionProvider): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-${((parseInt(hex.slice(16, 18), 16) & 0x3f) | 0x80).toString(16)}${hex.slice(18, 20)}-${hex.slice(20)}`;
 }
 
-function serializeConnection(provider: ConnectionProvider, record: Record<string, unknown> | undefined) {
+function serializeConnection(provider: ConnectionProvider, record: Record<string, unknown> | null | undefined) {
   const catalog = connectionCatalog.find(c => c.provider === provider)!;
   const now = new Date().toISOString();
   if (!record) {
@@ -57,7 +58,7 @@ function serializeConnection(provider: ConnectionProvider, record: Record<string
       updatedAt: now,
     };
   }
-  const config = record.configuration ? JSON.parse(String(record.configuration)) : {};
+  const config = parseJsonColumn(record.configuration);
   return {
     id: String(record.id),
     provider,
@@ -81,12 +82,15 @@ function serializeConnection(provider: ConnectionProvider, record: Record<string
 
 export async function GET(request: Request) {
   const organizationId = await resolveOrganizationId(request);
-  const result = await sqlite.execute({
-    sql: "SELECT * FROM connections WHERE organization_id = ?",
-    args: [organizationId],
-  });
-  const records = result.rows as Record<string, unknown>[];
-  const connections = PROVIDERS.map(provider => serializeConnection(provider, records.find(r => r.provider === provider)));
+  const supabase = getSupabaseAdmin();
+
+  const { data: records, error } = await supabase
+    .from("connections")
+    .select("*")
+    .eq("organization_id", organizationId);
+  if (error) throw new Error(`Failed to load connections: ${error.message}`);
+
+  const connections = PROVIDERS.map(provider => serializeConnection(provider, records?.find(r => r.provider === provider)));
   const activity = await getActivity(organizationId);
   const counts = await getRevenueCounts(organizationId);
   const connected = connections.filter(item => ["CONNECTING", "CONNECTED", "SYNCING", "SYNCED"].includes(item.status)).length;
@@ -102,19 +106,25 @@ export async function GET(request: Request) {
 }
 
 async function getActivity(organizationId: string) {
-  const result = await sqlite.execute({
-    sql: `SELECT s.id, c.provider, s.status, s.error, s.created_at, s.completed_at
-          FROM sync_jobs s
-          INNER JOIN connections c ON s.connection_id = c.id
-          WHERE s.organization_id = ?
-          ORDER BY s.created_at DESC
-          LIMIT 12`,
-    args: [organizationId],
-  });
+  const supabase = getSupabaseAdmin();
+  const { data: jobs } = await supabase
+    .from("sync_jobs")
+    .select("id, connection_id, status, error, created_at, completed_at")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false })
+    .limit(12);
 
-  return result.rows.map(job => ({
+  const connIds = (jobs ?? []).map(j => j.connection_id);
+  const { data: conns } = await supabase
+    .from("connections")
+    .select("id, provider")
+    .in("id", connIds.length ? connIds : ["00000000-0000-0000-0000-000000000000"]);
+
+  const providerById = new Map((conns ?? []).map(c => [c.id, c.provider]));
+
+  return (jobs ?? []).map(job => ({
     id: String(job.id),
-    provider: String(job.provider),
+    provider: providerById.get(job.connection_id) ?? "unknown",
     title: job.status === "FAILED" ? "Synchronization needs attention" : job.status === "SUCCEEDED" ? "Synchronization completed" : "Synchronization requested",
     detail: job.error ? String(job.error) : `Sync job is ${String(job.status).toLowerCase()}.`,
     status: job.status === "FAILED" ? "error" : "info",
