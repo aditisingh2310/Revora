@@ -1,0 +1,7 @@
+# Local-only env (secrets live in Vercel project env vars, never in uploads)
+.env*.local
+*.local
+
+# Build output / deps (rebuilt remotely)
+.next
+node_modules
