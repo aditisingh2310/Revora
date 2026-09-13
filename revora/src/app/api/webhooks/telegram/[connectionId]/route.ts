@@ -76,6 +76,11 @@ export async function POST(_request: Request, { params }: RouteContext) {
     const contact = await upsertContactFromMessage(client, normalized);
     await saveIncomingMessage(client, normalized, contact.id);
 
+    const { handleIncomingForAgent } = await import("@/lib/agent/handle");
+    void handleIncomingForAgent(normalized, contact.id).catch((e) =>
+      console.error("agent failed", e),
+    );
+
     return NextResponse.json({ ok: true, stored: true });
   } catch (err) {
     console.error("Error handling Telegram webhook", err);
