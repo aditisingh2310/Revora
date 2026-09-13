@@ -2,6 +2,9 @@
 revora/.env*.local
 *.local
 
+# Local build output (rebuilt remotely; never upload)
+revora/.next
+
 # Parts of the monorepo that are not deployed to Vercel
 api-server
 docs
