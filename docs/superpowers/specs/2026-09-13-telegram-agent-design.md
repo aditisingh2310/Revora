@@ -36,7 +36,7 @@ Brain loop:
 - Input: `NormalizedMessage + ContactRow + {shopId, inboxId, organizationId}`
 - Org resolution v1: reuse existing `resolveOrganizationId(request)` demo-org helper (single workspace env `REVORA_DEMO_ORGANIZATION_ID`). No new shop->org FK in v1. Future migration adds `shops.organization_id` and webhook resolves it directly; runner signature already accepts it so no refactor needed.
 - System prompt: "You are Revora assistant for [shop]. Friendly, concise, use order/revenue data. If unsure, say you'll check with the team."
-- LLM: OpenAI `gpt-4o-mini` via Vercel AI SDK (`ai` + `openai` packages), 1-2 tool rounds max, 15s timeout
+- LLM: `muse-spark-1.3-contributor-free` via OpenCode Zen (OpenAI-compatible `https://opencode.ai/zen/v1`, `@ai-sdk/openai` `createOpenAI`, key `OPENCODE_ZEN_API_KEY`, override `AGENT_MODEL`), 2 tool steps max, 15s timeout
 - Output: `{ shouldReply: boolean, text: string (max ~300 chars) }`
 - `/start` handled as canned welcome without LLM call (cost saver).
 
@@ -63,7 +63,7 @@ Reply:
 - Webhook always 200. Agent failures logged, never 5xx to Telegram (prevents retry storms).
 - LLM timeout 15s, 1 retry, then silent-fail (no reply beats wrong reply).
 - Idempotency via existing unique `externalMessageId`.
-- Secrets server-only: `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Never import server client in client components.
+- Secrets server-only: `TELEGRAM_BOT_TOKEN`, `OPENCODE_ZEN_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Never import server client in client components.
 - Validate Telegram secret header if configured. Throttle: max 5 LLM calls/min per contact (in-memory v1).
 - Failures write `activity` row `status:'error'` for visibility in existing feed.
 
@@ -74,7 +74,7 @@ Reply:
   1. Set `.env.local`: `AGENT_ENABLED=true`, tokens.
   2. `pnpm dev`, expose with ngrok, `setWebhook` to `/api/webhooks/telegram/<connectionId>`.
   3. Send "hi, how are sales today?" from Telegram -> expect 2-3s reply with real counts from Supabase.
-- New deps only: `ai`, `openai`. No Python, no FastAPI, no Pydantic duplication.
+- New deps only: `ai`, `openai`, `@ai-sdk/openai`. No Python, no FastAPI, no Pydantic duplication.
 
 ## 7. Non-Goals (YAGNI)
 - No Python service, no LangGraph, no vector DB in v1 (Supabase LIKE/ordering is enough).

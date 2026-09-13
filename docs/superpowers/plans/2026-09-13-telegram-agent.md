@@ -6,7 +6,7 @@
 
 **Architecture:** Extend the existing `POST /api/webhooks/telegram/[connectionId]` flow with a fire-and-forget agent (`src/lib/agent/tools.ts` + `runner.ts`) and implement `TelegramAdapter.sendMessage` via Bot API. No new service.
 
-**Tech Stack:** TypeScript, Next.js 15 App Router, Supabase (`getSupabaseAdmin`), Zod, Vercel AI SDK (`ai` + `openai`), `tsx` + `node:test` for tests.
+**Tech Stack:** TypeScript, Next.js 15 App Router, Supabase (`getSupabaseAdmin`), Zod, Vercel AI SDK (`ai` + `@ai-sdk/openai` via OpenCode Zen), `tsx` + `node:test` for tests.
 
 ---
 
@@ -21,7 +21,7 @@
 - Modify: `revora/src/app/api/webhooks/telegram/[connectionId]/route.ts` — after `saveIncomingMessage`, fire-and-forget `handleIncomingForAgent`.
 - Create: `revora/src/lib/agent/handle.ts` — orchestration (load context, call runner, send, save outgoing, log activity).
 - Modify: `revora/package.json` — add `ai`, `openai` deps.
-- Modify: `revora/.env.example` (create if missing) — document `AGENT_ENABLED`, `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`.
+- Modify: `revora/.env.example` (create if missing) — document `AGENT_ENABLED`, `TELEGRAM_BOT_TOKEN`, `OPENCODE_ZEN_API_KEY`, `AGENT_MODEL`.
 
 ---
 
@@ -48,7 +48,8 @@ SUPABASE_SERVICE_ROLE_KEY=replace-me
 REVORA_DEMO_ORGANIZATION_ID=00000000-0000-4000-8000-000000000001
 AGENT_ENABLED=true
 TELEGRAM_BOT_TOKEN=123456:ABC-replace-me
-OPENAI_API_KEY=sk-replace-me
+OPENCODE_ZEN_API_KEY=sk-replace-me
+AGENT_MODEL=muse-spark-1.3-contributor-free
 ```
 Run: `pnpm --filter @workspace/revora typecheck`
 Expected: PASS (no code changes yet, types still green).
@@ -221,11 +222,16 @@ Expected: FAIL with "Cannot find module './runner'".
 
 Create `revora/src/lib/agent/runner.ts`:
 ```ts
-import { generateText, tool } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { generateText, tool, stepCountIs } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 import { getShopStats, searchRecentOrders } from "./tools";
 import { resolveOrganizationId } from "@/lib/tenant";
+
+const zen = createOpenAI({
+  baseURL: "https://opencode.ai/zen/v1",
+  apiKey: process.env.OPENCODE_ZEN_API_KEY,
+});
 
 export type LlmFn = (prompt: { system: string; user: string }) => Promise<{ text: string }>;
 
@@ -261,20 +267,20 @@ export async function runAgent(opts: {
   const organizationId =
     opts.organizationId ?? (await resolveOrganizationId(new Request("http://local/agent")));
   const { text: answer } = await generateText({
-    model: openai("gpt-4o-mini"),
+    model: zen(process.env.AGENT_MODEL ?? "muse-spark-1.3-contributor-free"),
     system:
       "You are Revora assistant. Friendly, concise, max 300 chars. Use tools for real numbers. Never invent order IDs.",
     prompt: text,
-    maxSteps: 2,
+    stopWhen: stepCountIs(2),
     tools: {
       getShopStats: tool({
         description: "Shop totals + telegram counts",
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         execute: async () => getShopStats(organizationId),
       }),
       searchRecentOrders: tool({
         description: "Last 10 orders",
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         execute: async () => searchRecentOrders(organizationId, 10),
       }),
     },
@@ -516,7 +522,7 @@ Expected: Next build succeeds (may warn about env, must not error on types).
 
 - [ ] **Step 2: Manual Telegram demo**
 
-1. Set `revora/.env.local` from `.env.example` with real `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`, `AGENT_ENABLED=true`.
+1. Set `revora/.env.local` from `.env.example` with real `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TELEGRAM_BOT_TOKEN`, `OPENCODE_ZEN_API_KEY`, `AGENT_ENABLED=true`.
 2. Run: `pnpm --filter @workspace/revora dev`
 3. Expose: `ngrok http 3000`, then `curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=https://<ngrok>/api/webhooks/telegram/<connectionId>"`
 4. From Telegram send: `hi`, then `how are sales today?`
