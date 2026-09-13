@@ -1,4 +1,4 @@
-import { generateText, tool } from "ai";
+import { generateText, stepCountIs, tool } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { getShopStats, searchRecentOrders } from "./tools";
@@ -42,16 +42,16 @@ export async function runAgent(opts: {
     system:
       "You are Revora assistant. Friendly, concise, max 300 chars. Use tools for real numbers. Never invent order IDs.",
     prompt: text,
-    maxSteps: 2,
+    stopWhen: stepCountIs(2),
     tools: {
       getShopStats: tool({
         description: "Shop totals + telegram counts",
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         execute: async () => getShopStats(organizationId),
       }),
       searchRecentOrders: tool({
         description: "Last 10 orders",
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         execute: async () => searchRecentOrders(organizationId, 10),
       }),
     },
