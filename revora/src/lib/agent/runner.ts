@@ -1,10 +1,14 @@
 import { generateText, stepCountIs, tool } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 import { getShopStats, searchRecentOrders } from "./tools";
 import { resolveOrganizationId } from "@/lib/tenant";
 
 export type LlmFn = (prompt: { system: string; user: string }) => Promise<{ text: string }>;
+
+export const AGENT_MODEL_ID = process.env.AGENT_MODEL ?? "muse-spark-1.3-contributor-free";
+export const ZEN_BASE_URL = "https://opencode.ai/zen/v1";
+const zen = createOpenAI({ baseURL: ZEN_BASE_URL, apiKey: process.env.OPENCODE_ZEN_API_KEY });
 
 export function decideReply(opts: { text: string; isDuplicate: boolean }): {
   shouldReply: boolean;
@@ -38,7 +42,7 @@ export async function runAgent(opts: {
   const organizationId =
     opts.organizationId ?? (await resolveOrganizationId(new Request("http://local/agent")));
   const { text: answer } = await generateText({
-    model: openai("gpt-4o-mini"),
+    model: zen(AGENT_MODEL_ID),
     system:
       "You are Revora assistant. Friendly, concise, max 300 chars. Use tools for real numbers. Never invent order IDs.",
     prompt: text,

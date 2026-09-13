@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { decideReply, runAgent } from "./runner";
+import { AGENT_MODEL_ID, ZEN_BASE_URL, decideReply, runAgent } from "./runner";
 
 describe("decideReply gating", () => {
   it("stays silent on empty/duplicate", () => {
@@ -23,5 +23,10 @@ describe("decideReply gating", () => {
     });
     assert.equal(res.shouldReply, true);
     assert.match(res.text, /12 orders/);
+  });
+
+  it("targets OpenCode Zen free model by default", () => {
+    assert.equal(ZEN_BASE_URL, "https://opencode.ai/zen/v1");
+    assert.match(AGENT_MODEL_ID, /muse-spark/);
   });
 });
