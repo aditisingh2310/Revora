@@ -1,0 +1,9 @@
+# Local-only env (secrets are set as Vercel project env vars instead)
+revora/.env*.local
+*.local
+
+# Parts of the monorepo that are not deployed to Vercel
+api-server
+docs
+.commandcode
+.mcp.json
