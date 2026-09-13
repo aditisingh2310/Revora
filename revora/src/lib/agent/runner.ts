@@ -21,6 +21,11 @@ export function decideReply(opts: { text: string; isDuplicate: boolean }): {
 
 const WELCOME = "Welcome to Revora! Ask me about orders, sales, or support and I'll help.";
 
+// Plain greetings never need the LLM: answer instantly, no cost, no failure mode.
+const GREETING = /^(hi+|hello|hey+|yo|hola|namaste)[!.,\s]*$/i;
+const GREETING_REPLY =
+  "Hey! I'm the Revora assistant. Ask me about orders, sales, or support and I'll pull the real numbers for you.";
+
 export async function runAgent(opts: {
   text: string;
   organizationId?: string;
@@ -30,6 +35,7 @@ export async function runAgent(opts: {
   const gate = decideReply({ text, isDuplicate: false });
   if (!gate.shouldReply) return { shouldReply: false, text: "" };
   if (text.startsWith("/start")) return { shouldReply: true, text: WELCOME };
+  if (GREETING.test(text)) return { shouldReply: true, text: GREETING_REPLY };
 
   if (opts.llm) {
     const out = await opts.llm({

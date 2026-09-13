@@ -16,6 +16,15 @@ describe("decideReply gating", () => {
     assert.equal(res.text.toLowerCase().includes("welcome"), true);
   });
 
+  it("answers greetings without LLM", async () => {
+    const res = await runAgent({
+      text: "hi",
+      llm: async () => ({ text: "SHOULD-NOT-CALL" }),
+    });
+    assert.equal(res.shouldReply, true);
+    assert.match(res.text.toLowerCase(), /revora|orders|sales/);
+  });
+
   it("runs one mocked tool round for sales question", async () => {
     const res = await runAgent({
       text: "how are sales today?",
