@@ -6,9 +6,13 @@ import { resolveOrganizationId } from "@/lib/tenant";
 
 export type LlmFn = (prompt: { system: string; user: string }) => Promise<{ text: string }>;
 
-export const AGENT_MODEL_ID = process.env.AGENT_MODEL ?? "muse-spark-1.3-contributor-free";
-export const ZEN_BASE_URL = "https://opencode.ai/zen/v1";
-const zen = createOpenAI({ baseURL: ZEN_BASE_URL, apiKey: process.env.OPENCODE_ZEN_API_KEY });
+// AGENTS.md §1: no hardcoded replies. Every user-visible string comes from the
+// LLM via Kilo gateway. Gating is only empty/duplicate (decideReply).
+export const KILO_BASE_URL = "https://api.kilo.ai/api/gateway";
+export const AGENT_MODEL_ID = process.env.AGENT_MODEL ?? "nex-agi/nex-n2.5-mini:free";
+export const AGENT_FALLBACK_MODEL_ID =
+  process.env.AGENT_FALLBACK_MODEL ?? "kilo-auto/free";
+const kilo = createOpenAI({ baseURL: KILO_BASE_URL, apiKey: process.env.KILO_API_KEY });
 
 export function decideReply(opts: { text: string; isDuplicate: boolean }): {
   shouldReply: boolean;
@@ -19,38 +23,33 @@ export function decideReply(opts: { text: string; isDuplicate: boolean }): {
   return { shouldReply: true, reason: "ok" };
 }
 
-const WELCOME = "Welcome to Revora! Ask me about orders, sales, or support and I'll help.";
-
-// Plain greetings never need the LLM: answer instantly, no cost, no failure mode.
-const GREETING = /^(hi+|hello|hey+|yo|hola|namaste)[!.,\s]*$/i;
-const GREETING_REPLY =
-  "Hey! I'm the Revora assistant. Ask me about orders, sales, or support and I'll pull the real numbers for you.";
+const SYSTEM_PROMPT =
+  "You are the Revora assistant for a small shop. Friendly, concise, max 300 chars. " +
+  "Greet users naturally when they say hi/hello/hey. " +
+  "Treat /start as a new conversation and welcome them to Revora, " +
+  "mentioning you can help with orders, sales, or support. " +
+  "Use tools for real numbers. Never invent order IDs.";
 
 export async function runAgent(opts: {
   text: string;
   organizationId?: string;
   llm?: LlmFn;
+  modelId?: string;
 }): Promise<{ shouldReply: boolean; text: string }> {
   const text = (opts.text ?? "").trim();
   const gate = decideReply({ text, isDuplicate: false });
   if (!gate.shouldReply) return { shouldReply: false, text: "" };
-  if (text.startsWith("/start")) return { shouldReply: true, text: WELCOME };
-  if (GREETING.test(text)) return { shouldReply: true, text: GREETING_REPLY };
 
   if (opts.llm) {
-    const out = await opts.llm({
-      system: "You are Revora assistant. Friendly, concise, max 300 chars.",
-      user: text,
-    });
+    const out = await opts.llm({ system: SYSTEM_PROMPT, user: text });
     return { shouldReply: true, text: out.text.slice(0, 300) };
   }
 
   const organizationId =
     opts.organizationId ?? (await resolveOrganizationId(new Request("http://local/agent")));
   const { text: answer } = await generateText({
-    model: zen(AGENT_MODEL_ID),
-    system:
-      "You are Revora assistant. Friendly, concise, max 300 chars. Use tools for real numbers. Never invent order IDs.",
+    model: kilo(opts.modelId ?? AGENT_MODEL_ID),
+    system: SYSTEM_PROMPT,
     prompt: text,
     stopWhen: stepCountIs(2),
     tools: {
