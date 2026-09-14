@@ -30,7 +30,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="relative noise border-y border-white/10 bg-[#000000] px-4 py-28 sm:px-6">
+    <section id="how-it-works" className="relative noise border-y border-white/10 bg-[#000000] px-4 py-16 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <motion.div
@@ -43,18 +43,18 @@ export function HowItWorks() {
               <Sparkles className="h-3.5 w-3.5 text-white" />
               Deployment Pipeline
             </span>
-            <h2 className="mt-4 font-[family-name:var(--font-sora)] text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-              From webhook payload to response in <br />
+            <h2 className="mt-4 font-[family-name:var(--font-sora)] text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+              From webhook payload to response in <br className="hidden sm:block" />
               <span className="text-monochrome-gradient">three clean steps.</span>
             </h2>
           </motion.div>
         </div>
 
         {/* Step Cards with Monochrome Connecting Line */}
-        <div className="relative mt-20">
+        <div className="relative mt-10 sm:mt-20">
           <div className="absolute left-0 right-0 top-1/2 hidden h-px -translate-y-1/2 lg:block bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-60 shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
 
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-8 lg:grid-cols-3">
             {steps.map((s) => {
               const Icon = s.icon;
               return (
@@ -65,7 +65,7 @@ export function HowItWorks() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.6 }}
                   onMouseEnter={playHoverSound}
-                  className="group relative rounded-3xl border border-white/10 bg-[#09090b]/90 p-8 backdrop-blur-xl transition duration-300 hover:border-white hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+                  className="group relative rounded-3xl border border-white/10 bg-[#09090b]/90 p-5 backdrop-blur-xl transition duration-300 hover:border-white hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] sm:p-8"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-[#121215] text-white shadow-[0_0_15px_rgba(255,255,255,0.05)]">
@@ -83,8 +83,8 @@ export function HowItWorks() {
                     {s.body}
                   </p>
 
-                  <div className="mt-6 rounded-xl border border-white/10 bg-[#000000] p-3 font-mono text-[10px] text-white/80 font-semibold">
-                    {s.code}
+                  <div className="mt-6 overflow-x-auto rounded-xl border border-white/10 bg-[#000000] p-3 font-mono text-[10px] text-white/80 font-semibold">
+                    <code className="block whitespace-nowrap">{s.code}</code>
                   </div>
                 </motion.div>
               );

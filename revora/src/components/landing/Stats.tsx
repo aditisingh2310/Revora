@@ -52,15 +52,15 @@ const stats = [
 
 export function Stats() {
   return (
-    <section id="stats" className="border-y border-white/10 bg-[#000000] px-4 py-20 sm:px-6">
+    <section id="stats" className="border-y border-white/10 bg-[#000000] px-4 py-12 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 lg:grid-cols-4 shadow-2xl">
           {stats.map((s) => (
-            <div key={s.label} className="bg-[#09090b] px-6 py-12 text-center transition hover:bg-[#121215]">
-              <div className="font-[family-name:var(--font-sora)] text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+            <div key={s.label} className="bg-[#09090b] px-3 py-8 text-center transition hover:bg-[#121215] sm:px-6 sm:py-12">
+              <div className="font-[family-name:var(--font-sora)] text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
                 <Counter value={s.value} suffix={s.suffix} decimals={s.decimals} />
               </div>
-              <p className="mt-3 text-xs font-semibold text-[#a1a1aa] uppercase tracking-wide">{s.label}</p>
+              <p className="mt-3 px-1 text-[10px] font-semibold uppercase tracking-wide text-[#a1a1aa] sm:text-xs">{s.label}</p>
             </div>
           ))}
         </div>

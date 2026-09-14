@@ -51,10 +51,10 @@ export function ImportCsv() {
 
   return (
     <Shell>
-      <div className="mx-auto max-w-5xl space-y-8">
+      <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Data intake / Import</p>
-          <h1 className="mt-2 font-serif text-4xl tracking-[-.045em]">Bring history into focus.</h1>
+          <h1 className="mt-2 font-serif text-3xl tracking-[-.045em] sm:text-4xl">Bring history into focus.</h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">A guided import for the revenue that lives outside your connected channels.</p>
         </div>
         <div className="flex items-center gap-1 rounded-xl bg-muted/70 p-1 sm:max-w-2xl">
@@ -66,7 +66,7 @@ export function ImportCsv() {
           ))}
         </div>
         {step === 0 && (
-          <label className="flex min-h-[280px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-primary/40 bg-primary/[.035] p-8 text-center transition-colors hover:bg-primary/[.07]" data-testid="dropzone-csv">
+          <label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-primary/40 bg-primary/[.035] p-5 text-center transition-colors hover:bg-primary/[.07] sm:min-h-[280px] sm:p-8" data-testid="dropzone-csv">
             <input type="file" accept=".csv,.xlsx,.xls" className="sr-only" onChange={e => e.target.files?.[0] && parseFile(e.target.files[0])} data-testid="input-csv-file" />
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><FileSpreadsheet className="h-7 w-7" /></span>
             <h2 className="mt-5 text-sm font-semibold">Drop a CSV or XLSX file here</h2>
@@ -82,7 +82,7 @@ export function ImportCsv() {
                 <p className="truncate text-sm font-medium">{fileName}</p>
                 <p className="text-xs text-muted-foreground">{rows.length} preview rows</p>
               </div>
-              <button onClick={() => setStep(2)} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Continue</button>
+              <button onClick={() => setStep(2)} className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Continue</button>
             </div>
             <div className="overflow-x-auto rounded-xl border border-border">
               <table className="w-full text-xs">
@@ -129,9 +129,9 @@ function ImportComplete({ result, onReset }: { result: NonNullable<ReturnType<ty
     URL.revokeObjectURL(url);
   };
   return (
-    <div className="rounded-2xl border border-border/80 bg-card p-6 md:p-9">
+    <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 md:p-9">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><Check className="h-6 w-6" /></div>
-      <h2 className="mt-5 font-serif text-3xl tracking-[-.04em]">Import reviewed.</h2>
+      <h2 className="mt-5 font-serif text-2xl tracking-[-.04em] sm:text-3xl">Import reviewed.</h2>
       <p className="mt-2 text-sm text-muted-foreground">The API returned the result below. Your successful records are now part of the revenue network.</p>
       <div className="mt-7 grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-border/70 bg-card p-4"><Users className="h-4 w-4 text-primary" /><p className="mt-4 font-mono text-xl font-bold tracking-[-.05em]">{result.importedCustomers}</p><p className="mt-1 text-[10px] text-muted-foreground">Customers imported</p></div>
@@ -139,9 +139,9 @@ function ImportComplete({ result, onReset }: { result: NonNullable<ReturnType<ty
         <div className="rounded-xl border border-border/70 bg-card p-4"><WalletCards className="h-4 w-4 text-primary" /><p className="mt-4 font-mono text-xl font-bold tracking-[-.05em]">{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(result.revenue)}</p><p className="mt-1 text-[10px] text-muted-foreground">Revenue imported</p></div>
       </div>
       {result.failedRows > 0 && (
-        <div className="mt-5 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <div><p className="text-xs font-semibold text-amber-900">{result.failedRows} row{result.failedRows === 1 ? "" : "s"} need attention</p><p className="mt-1 text-[10px] text-amber-800/70">Download the report, fix the source file, and import again.</p></div>
-          <button onClick={downloadErrors} className="inline-flex items-center gap-2 rounded-lg border border-amber-300 px-3 py-2 text-[10px] font-semibold text-amber-900" data-testid="button-download-errors"><Download className="h-3.5 w-3.5" />Error report</button>
+        <div className="mt-5 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0"><p className="text-xs font-semibold text-amber-900">{result.failedRows} row{result.failedRows === 1 ? "" : "s"} need attention</p><p className="mt-1 text-[10px] text-amber-800/70">Download the report, fix the source file, and import again.</p></div>
+          <button onClick={downloadErrors} className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-amber-300 px-3 py-2 text-[10px] font-semibold text-amber-900 sm:self-auto" data-testid="button-download-errors"><Download className="h-3.5 w-3.5" />Error report</button>
         </div>
       )}
       <button onClick={onReset} className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground" data-testid="button-new-import"><Plus className="h-3.5 w-3.5" />Import another file</button>

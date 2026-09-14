@@ -88,11 +88,23 @@ export async function GET(request: Request) {
     .from("connections")
     .select("*")
     .eq("organization_id", organizationId);
-  if (error) throw new Error(`Failed to load connections: ${error.message}`);
+  if (error) {
+    console.warn("[connections] Failed to load connections, returning empty state.", error);
+  }
 
   const connections = PROVIDERS.map(provider => serializeConnection(provider, records?.find(r => r.provider === provider)));
-  const activity = await getActivity(organizationId);
-  const counts = await getRevenueCounts(organizationId);
+  let activity: Awaited<ReturnType<typeof getActivity>> = [];
+  let counts: Awaited<ReturnType<typeof getRevenueCounts>> = { customers: 0, orders: 0 };
+  try {
+    activity = await getActivity(organizationId);
+  } catch (err) {
+    console.warn("[connections] Failed to load activity, returning empty list.", err);
+  }
+  try {
+    counts = await getRevenueCounts(organizationId);
+  } catch (err) {
+    console.warn("[connections] Failed to load revenue counts, returning zeros.", err);
+  }
   const connected = connections.filter(item => ["CONNECTING", "CONNECTED", "SYNCING", "SYNCED"].includes(item.status)).length;
   const needsAttention = connections.filter(item => String(item.status) === "ERROR").length;
   const lastSynchronization = connections.map(item => item.lastSyncAt).filter((v): v is string => Boolean(v)).sort().at(-1) ?? null;

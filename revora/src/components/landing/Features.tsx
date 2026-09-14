@@ -6,7 +6,7 @@ import { playHoverSound } from "../vfx/SoundEffects";
 
 export function Features() {
   return (
-    <section id="features" className="relative px-4 py-28 sm:px-6">
+    <section id="features" className="relative px-4 py-16 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
         {/* Section Title Header */}
         <div className="mx-auto max-w-2xl text-center">
@@ -20,8 +20,8 @@ export function Features() {
               <Sparkles className="h-3.5 w-3.5 text-white" />
               Engine Architecture
             </span>
-            <h2 className="mt-4 font-[family-name:var(--font-sora)] text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-              Architected for high-velocity <br />
+            <h2 className="mt-4 font-[family-name:var(--font-sora)] text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+              Architected for high-velocity <br className="hidden sm:block" />
               <span className="text-monochrome-gradient">customer communications.</span>
             </h2>
             <p className="mt-4 text-base text-[#a1a1aa] font-medium">
@@ -31,7 +31,7 @@ export function Features() {
         </div>
 
         {/* Bento Grid */}
-        <div className="mt-16 grid gap-6 md:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:mt-16 sm:gap-6 md:grid-cols-3">
           {/* Card 1: Unified Adapter Matrix (2 columns wide) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -39,14 +39,14 @@ export function Features() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             onMouseEnter={playHoverSound}
-            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#09090b] to-[#000000] p-8 shadow-2xl transition hover:border-white/30 md:col-span-2"
+            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#09090b] to-[#000000] p-5 shadow-2xl transition hover:border-white/30 sm:p-8 md:col-span-2"
           >
             <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/[0.02] blur-3xl transition duration-500 group-hover:scale-125" />
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/20 bg-[#121215] text-white shadow-[0_0_15px_rgba(255,255,255,0.08)]">
               <Inbox className="h-5 w-5" />
             </div>
 
-            <h3 className="mt-6 font-[family-name:var(--font-sora)] text-2xl font-bold text-white">
+            <h3 className="mt-6 font-[family-name:var(--font-sora)] text-xl font-bold text-white sm:text-2xl">
               Universal Channel Normalizer
             </h3>
             <p className="mt-3 max-w-lg text-sm leading-relaxed text-[#a1a1aa]">
@@ -63,7 +63,7 @@ export function Features() {
                   ⚡ 2.1ms Normalized
                 </span>
               </div>
-              <div className="mt-3 grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
+              <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[10px] font-bold sm:grid-cols-4">
                 <div className="rounded-lg bg-[#121215] p-2 border border-white/5 text-white/70">Telegram</div>
                 <div className="rounded-lg bg-[#121215] p-2 border border-white/5 text-white/70">WhatsApp</div>
                 <div className="rounded-lg bg-[#121215] p-2 border border-white/5 text-white/70">Instagram</div>
@@ -81,7 +81,7 @@ export function Features() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
             onMouseEnter={playHoverSound}
-            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#09090b] to-[#000000] p-8 shadow-2xl transition hover:border-white/30"
+            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#09090b] to-[#000000] p-5 shadow-2xl transition hover:border-white/30 sm:p-8"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/20 bg-[#121215] text-white shadow-[0_0_15px_rgba(255,255,255,0.08)]">
               <Zap className="h-5 w-5" />
@@ -110,7 +110,7 @@ export function Features() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15 }}
             onMouseEnter={playHoverSound}
-            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#09090b] to-[#000000] p-8 shadow-2xl transition hover:border-white/30"
+            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#09090b] to-[#000000] p-5 shadow-2xl transition hover:border-white/30 sm:p-8"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/20 bg-[#121215] text-white shadow-[0_0_15px_rgba(255,255,255,0.08)]">
               <Layers className="h-5 w-5" />
@@ -137,14 +137,14 @@ export function Features() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
             onMouseEnter={playHoverSound}
-            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#09090b] to-[#000000] p-8 shadow-2xl transition hover:border-white/30 md:col-span-2"
+            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#09090b] to-[#000000] p-5 shadow-2xl transition hover:border-white/30 sm:p-8 md:col-span-2"
           >
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-white/[0.02] blur-3xl transition duration-500 group-hover:scale-125" />
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/20 bg-[#121215] text-white shadow-[0_0_15px_rgba(255,255,255,0.08)]">
               <Bot className="h-5 w-5" />
             </div>
 
-            <h3 className="mt-6 font-[family-name:var(--font-sora)] text-2xl font-bold text-white">
+            <h3 className="mt-6 font-[family-name:var(--font-sora)] text-xl font-bold text-white sm:text-2xl">
               Autonomous AI Copilot Engine
             </h3>
             <p className="mt-3 max-w-lg text-sm leading-relaxed text-[#a1a1aa]">

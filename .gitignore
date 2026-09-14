@@ -27,3 +27,5 @@ revora/data/
 
 # Keep api-server/dist tracked (committed build output)
 !api-server/dist/
+
+.vercel

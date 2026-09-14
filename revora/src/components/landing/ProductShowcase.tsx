@@ -120,7 +120,7 @@ export function ProductShowcase() {
     : conversations.filter((c) => c.channel === selectedChannel);
 
   return (
-    <section id="product" className="relative noise px-4 py-24 sm:px-6">
+    <section id="product" className="relative noise px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-6xl text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -132,8 +132,8 @@ export function ProductShowcase() {
             <Sparkles className="h-3.5 w-3.5 text-white" />
             Interactive Workspace Simulator
           </span>
-          <h2 className="mt-4 font-[family-name:var(--font-sora)] text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-            One unified inbox. <br />
+          <h2 className="mt-4 font-[family-name:var(--font-sora)] text-2xl font-extrabold tracking-tight text-white sm:text-5xl">
+            One unified inbox. <br className="hidden sm:block" />
             <span className="text-monochrome-gradient">Absolute context simplicity.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm text-[#a1a1aa] font-medium sm:text-base">
@@ -151,14 +151,14 @@ export function ProductShowcase() {
         className="mx-auto mt-10 max-w-5xl rounded-3xl border border-white/10 bg-[#09090b] backdrop-blur-xl overflow-hidden shadow-2xl"
       >
         {/* Top Header Window Bar */}
-        <div className="flex items-center justify-between border-b border-white/10 bg-[#121215]/90 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-white/20" />
-            <div className="h-3 w-3 rounded-full bg-white/40" />
-            <div className="h-3 w-3 rounded-full bg-white" />
-            <span className="ml-2 text-[10px] font-mono text-[#a1a1aa] flex items-center gap-1.5 font-semibold sm:text-xs">
-              <ShieldCheck className="h-3.5 w-3.5 text-white" />
-              console://live-inbox-router.revora
+        <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-[#121215]/90 px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="hidden h-3 w-3 shrink-0 rounded-full bg-white/20 min-[420px]:block" />
+            <div className="hidden h-3 w-3 shrink-0 rounded-full bg-white/40 min-[420px]:block" />
+            <div className="hidden h-3 w-3 shrink-0 rounded-full bg-white min-[420px]:block" />
+            <span className="ml-0 flex min-w-0 items-center gap-1.5 truncate font-mono text-[10px] font-semibold text-[#a1a1aa] min-[420px]:ml-2 sm:text-xs">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-white" />
+              <span className="truncate">console://live-inbox-router.revora</span>
             </span>
           </div>
 
@@ -172,9 +172,9 @@ export function ProductShowcase() {
 
         {/* Top Channel Filter Bar & Conversation Selectors */}
         <div className="border-b border-white/10 bg-[#000000] p-3">
-          <div className="flex items-center justify-between gap-3 overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             {/* Channel Filters */}
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 sm:pb-0">
               <Filter className="h-3.5 w-3.5 text-[#71717a] mr-1" />
               {["All", "Telegram", "WhatsApp", "Instagram"].map((ch) => (
                 <button
@@ -196,7 +196,7 @@ export function ProductShowcase() {
             </div>
 
             {/* Conversation Selector Pills */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:pb-0">
               {filteredConversations.map((c) => (
                 <button
                   key={c.id}
@@ -260,7 +260,7 @@ export function ProductShowcase() {
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-3.5">
+          <div className="flex-1 space-y-3.5 overflow-y-auto p-3 sm:p-5">
             {activeConv.messages.map((m) => (
               <div
                 key={m.id}
@@ -288,7 +288,7 @@ export function ProductShowcase() {
           </div>
 
           {/* Input Box */}
-          <div className="border-t border-white/10 p-4 bg-[#121215]">
+          <div className="border-t border-white/10 bg-[#121215] p-3 sm:p-4">
             <form
               onSubmit={(e) => {
                 e.preventDefault();

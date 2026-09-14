@@ -11,6 +11,14 @@ export async function POST(request: Request) {
   }
   const organizationId = await resolveOrganizationId(request);
   const rows = body.rows.map((row: Record<string, unknown>) => normalizeRevenueRow(row, body.mappings ?? {}));
-  const summary = await importNormalizedRows(organizationId, rows, "csv");
-  return NextResponse.json(summary, { status: 201 });
+  try {
+    const summary = await importNormalizedRows(organizationId, rows, "csv");
+    return NextResponse.json(summary, { status: 201 });
+  } catch (err) {
+    console.error("[imports/csv] Supabase import failed", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Import failed" },
+      { status: 503 },
+    );
+  }
 }

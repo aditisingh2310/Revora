@@ -16,10 +16,9 @@ export async function GET(request: Request) {
     .limit(12);
 
   const connIds = (jobs ?? []).map(j => j.connection_id);
-  const { data: conns } = await supabase
-    .from("connections")
-    .select("id, provider")
-    .in("id", connIds.length ? connIds : ["00000000-0000-0000-0000-000000000000"]);
+  const { data: conns } = connIds.length
+    ? await supabase.from("connections").select("id, provider").in("id", connIds)
+    : { data: [] as Array<{ id: string; provider: string }> };
 
   const providerById = new Map<string, string>((conns ?? []).map(c => [c.id, c.provider]));
 

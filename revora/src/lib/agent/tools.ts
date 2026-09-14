@@ -12,11 +12,8 @@ export function agentToolNames(): string[] {
   return [...toolNames];
 }
 
-const SALES_HINT = /(sale|revenue|order|today|total|how much|sales)/i;
-
-export function shouldUseRevenueTools(text: string): boolean {
-  return SALES_HINT.test(text);
-}
+// AGENTS.md §1: no regex content gates. The LLM decides when tools are needed;
+// every message (greetings included) reaches the LLM.
 
 export const getShopStatsInput = z.object({ organizationId: z.string().uuid() });
 

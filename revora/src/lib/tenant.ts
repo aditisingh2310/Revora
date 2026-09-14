@@ -11,7 +11,10 @@ export async function resolveOrganizationId(_request: Request): Promise<string> 
   const { error } = await supabase
     .from("organizations")
     .upsert({ id: organizationId, name: "Revora workspace" }, { onConflict: "id" });
-  if (error) throw new Error(`Failed to resolve organization: ${error.message}`);
+
+  if (error) {
+    console.warn("[tenant] Failed to upsert organization, continuing with resolved id.", error);
+  }
 
   return organizationId;
 }

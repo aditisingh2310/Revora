@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { agentToolNames, shouldUseRevenueTools } from "./tools";
+import { agentToolNames } from "./tools";
 
 describe("agent tools registry", () => {
   it("exposes exactly the v1 read-only tools", () => {
@@ -11,8 +11,7 @@ describe("agent tools registry", () => {
     ]);
   });
 
-  it("skips revenue tools when message is a greeting", () => {
-    assert.equal(shouldUseRevenueTools("hi!!"), false);
-    assert.equal(shouldUseRevenueTools("how are sales today?"), true);
-  });
+  // AGENTS.md §1: no content-based regex gates. Every message reaches the LLM,
+  // which decides when tools are needed — so there is nothing to assert here
+  // about greetings vs sales questions.
 });

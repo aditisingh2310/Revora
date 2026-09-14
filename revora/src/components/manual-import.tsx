@@ -16,9 +16,9 @@ export function ManualImport() {
     return (
       <Shell>
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-2xl border border-border/80 bg-card p-6 md:p-9">
+          <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 md:p-9">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><Check className="h-6 w-6" /></div>
-            <h2 className="mt-5 font-serif text-3xl tracking-[-.04em]">Record added.</h2>
+            <h2 className="mt-5 font-serif text-2xl tracking-[-.04em] sm:text-3xl">Record added.</h2>
             <div className="mt-7 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-border/70 bg-card p-4"><Users className="h-4 w-4 text-primary" /><p className="mt-4 font-mono text-xl font-bold tracking-[-.05em]">{result.importedCustomers}</p><p className="mt-1 text-[10px] text-muted-foreground">Customers</p></div>
               <div className="rounded-xl border border-border/70 bg-card p-4"><Package className="h-4 w-4 text-primary" /><p className="mt-4 font-mono text-xl font-bold tracking-[-.05em]">{result.importedOrders}</p><p className="mt-1 text-[10px] text-muted-foreground">Orders</p></div>
@@ -33,13 +33,13 @@ export function ManualImport() {
 
   return (
     <Shell>
-      <div className="mx-auto max-w-4xl space-y-8">
+      <div className="mx-auto max-w-4xl space-y-6 sm:space-y-8">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Data intake / Manual</p>
-          <h1 className="mt-2 font-serif text-4xl tracking-[-.045em]">Add one revenue record.</h1>
+          <h1 className="mt-2 font-serif text-3xl tracking-[-.045em] sm:text-4xl">Add one revenue record.</h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">For the deals that happened in the real world, outside a connected channel.</p>
         </div>
-        <form onSubmit={submit} className="rounded-2xl border border-border/80 bg-card p-5 md:p-8">
+        <form onSubmit={submit} className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 md:p-8">
           <div className="grid gap-5 md:grid-cols-2">
             {[["customer", "Customer name", "e.g. Taylor Reed"], ["product", "Product or service", "e.g. Brand strategy sprint"], ["orderValue", "Order value", "0.00"], ["channel", "Channel", "e.g. Referral or in-person"]].map(([key, label, placeholder]) => (
               <label key={key} className="text-xs font-semibold">
@@ -58,7 +58,7 @@ export function ManualImport() {
               </select>
             </label>
           </div>
-          <button type="submit" disabled={create.isPending} className="mt-6 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground disabled:opacity-50" data-testid="button-submit-manual">
+          <button type="submit" disabled={create.isPending} className="mt-6 w-full rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground disabled:opacity-50 sm:w-auto" data-testid="button-submit-manual">
             {create.isPending ? "Adding..." : "Add record"}
           </button>
         </form>
