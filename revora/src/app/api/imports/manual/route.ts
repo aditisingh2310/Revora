@@ -10,13 +10,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "customer, product, orderValue, channel, orderDate, status are required" }, { status: 400 });
   }
   const organizationId = await resolveOrganizationId(request);
-  const summary = await importNormalizedRows(organizationId, [{
-    customer: body.customer,
-    product: body.product,
-    orderValue: Number(body.orderValue),
-    channel: body.channel,
-    orderDate: body.orderDate,
-    status: body.status,
-  }], "manual");
-  return NextResponse.json(summary, { status: 201 });
+  try {
+    const summary = await importNormalizedRows(organizationId, [{
+      customer: body.customer,
+      product: body.product,
+      orderValue: Number(body.orderValue),
+      channel: body.channel,
+      orderDate: body.orderDate,
+      status: body.status,
+    }], "manual");
+    return NextResponse.json(summary, { status: 201 });
+  } catch (err) {
+    console.error("[imports/manual] Supabase import failed", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Import failed" },
+      { status: 503 },
+    );
+  }
 }

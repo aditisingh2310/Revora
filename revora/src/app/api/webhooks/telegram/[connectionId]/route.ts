@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createSupabaseClient } from "@/lib/comms/db/supabase";
 import { getChannelConnectionById } from "@/lib/comms/db/repositories/channels";
 import { getInboxById } from "@/lib/comms/db/repositories/inboxes";
@@ -75,6 +75,15 @@ export async function POST(_request: Request, { params }: RouteContext) {
 
     const contact = await upsertContactFromMessage(client, normalized);
     await saveIncomingMessage(client, normalized, contact.id);
+
+    const { handleIncomingForAgent } = await import("@/lib/agent/handle");
+    // after() keeps the serverless function alive for the agent + reply send.
+    // A bare fire-and-forget promise may be frozen after the response on Vercel.
+    after(() =>
+      handleIncomingForAgent(normalized, contact.id).catch((e) =>
+        console.error("agent failed", e),
+      ),
+    );
 
     return NextResponse.json({ ok: true, stored: true });
   } catch (err) {

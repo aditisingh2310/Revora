@@ -22,6 +22,13 @@ export const ConnectionStatusSchema = z.enum([
 
 export const HealthCheckResponse = z.object({
   status: z.string(),
+  supabase: z
+    .object({
+      configured: z.boolean(),
+      reachable: z.boolean(),
+      error: z.string().nullable(),
+    })
+    .optional(),
 });
 
 export const ProviderCatalogItem = z.object({

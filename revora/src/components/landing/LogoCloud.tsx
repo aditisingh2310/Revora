@@ -16,8 +16,8 @@ const channels = [
 
 export function LogoCloud() {
   return (
-    <section className="border-y border-edge bg-surface-0 py-12">
-      <Reveal className="mx-auto max-w-6xl px-6">
+    <section className="border-y border-edge bg-surface-0 px-4 py-8 sm:py-12">
+      <Reveal className="mx-auto max-w-6xl px-2 sm:px-6">
         <p className="text-center text-sm font-medium uppercase tracking-[0.18em] text-text-3">
           One inbox for every channel your customers use
         </p>

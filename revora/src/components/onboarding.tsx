@@ -18,14 +18,14 @@ export function Onboarding() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl py-6 md:py-12">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 md:py-12">
       <a href="/connections" data-testid="link-onboarding-logo" className="flex items-center gap-2.5">
         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm"><Check className="h-4 w-4" /></span>
         <span className="font-semibold tracking-[-.04em] text-lg">revora<span className="text-primary">.</span></span>
       </a>
-      <div className="mt-14 max-w-2xl">
+      <div className="mt-8 max-w-2xl sm:mt-14">
         <p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Start with your channels</p>
-        <h1 className="mt-3 font-serif text-5xl tracking-[-.05em] md:text-6xl">Where does your<br /><span className="text-muted-foreground/65">business happen?</span></h1>
+        <h1 className="mt-3 font-serif text-4xl tracking-[-.05em] sm:text-5xl md:text-6xl">Where does your<br className="hidden sm:block" /><span className="text-muted-foreground/65">business happen?</span></h1>
         <p className="mt-5 max-w-lg text-sm leading-relaxed text-muted-foreground">Pick the channels you sell through. You can add more later, and nothing is connected until you approve the provider flow.</p>
       </div>
       <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -48,9 +48,9 @@ export function Onboarding() {
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Import customers and orders from a CSV or XLSX file.</p>
         </a>
       </div>
-      <div className="mt-8 flex gap-3">
-        <a href="/connections" className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold hover:border-primary/40">Skip for now</a>
-        <a href="/connections" className={`rounded-xl px-4 py-2.5 text-xs font-semibold text-primary-foreground ${selected.length > 0 ? "bg-primary" : "bg-primary/50 pointer-events-none"}`}>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <a href="/connections" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center text-xs font-semibold hover:border-primary/40">Skip for now</a>
+        <a href="/connections" className={`rounded-xl px-4 py-2.5 text-center text-xs font-semibold text-primary-foreground ${selected.length > 0 ? "bg-primary" : "bg-primary/50 pointer-events-none"}`}>
           Continue{selected.length > 0 ? ` (${selected.length})` : ""}
         </a>
       </div>

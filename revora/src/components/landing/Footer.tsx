@@ -29,9 +29,9 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-[#000000] px-4 py-16 sm:px-6">
-      <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
-        <div>
+    <footer className="border-t border-white/10 bg-[#000000] px-4 py-12 sm:px-6 sm:py-16">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 sm:gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-3">
             <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white p-[1px]">
               <div className="flex h-full w-full items-center justify-center rounded-[7px] bg-[#000000]">
@@ -62,9 +62,9 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="mx-auto mt-12 flex max-w-6xl flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-[11px] font-bold text-[#71717a] sm:flex-row">
+      <div className="mx-auto mt-10 flex max-w-6xl flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-center text-[11px] font-bold text-[#71717a] sm:mt-12 sm:flex-row sm:text-left">
         <p>© {new Date().getFullYear()} Revora. All rights reserved.</p>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <a href="#" className="transition hover:text-white">Privacy Policy</a>
           <a href="#" className="transition hover:text-white">Terms of Service</a>
           <a href="#" className="transition hover:text-white">Security Matrix</a>

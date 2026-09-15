@@ -7,14 +7,14 @@ import { playHoverSound, playClickSound } from "../vfx/SoundEffects";
 
 export function Hero() {
   return (
-    <section className="relative noise overflow-hidden px-4 pb-20 pt-36 sm:px-6 lg:pt-44">
+    <section className="relative noise overflow-hidden px-4 pb-12 pt-28 sm:px-6 sm:pb-20 sm:pt-36 lg:pt-44">
       <div className="relative z-10 mx-auto max-w-6xl text-center">
         {/* Kernal-style Status Pill Badge (No Neon Glow) */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-[#09090b]/90 px-4 py-1.5 text-[10px] font-bold tracking-wider text-white/90 backdrop-blur-md"
+          className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-white/20 bg-[#09090b]/90 px-3 py-1.5 text-[10px] font-bold tracking-wider text-white/90 backdrop-blur-md sm:px-4"
         >
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
@@ -23,8 +23,8 @@ export function Hero() {
           <span className="uppercase tracking-[0.15em] text-white">
             REVORA COGNITIVE ROUTER
           </span>
-          <span className="text-white/30">•</span>
-          <span className="text-white/60">LIVE PIPELINE ACTIVATED</span>
+          <span className="hidden text-white/30 min-[420px]:inline">•</span>
+          <span className="hidden text-white/60 min-[420px]:inline">LIVE PIPELINE ACTIVATED</span>
         </motion.div>
 
         {/* Large Bold Display Headline */}
@@ -32,9 +32,9 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.08, ease: [0.21, 0.47, 0.32, 0.98] }}
-          className="mt-8 font-[family-name:var(--font-sora)] text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-7xl"
+          className="mt-8 font-[family-name:var(--font-sora)] text-3xl font-extrabold leading-[1.12] tracking-tight text-white sm:text-6xl sm:leading-[1.08] lg:text-7xl"
         >
-          Every customer conversation, <br />
+          Every customer conversation, <br className="hidden sm:block" />
           <span className="text-monochrome-gradient">unified in real-time.</span>
         </motion.h1>
 

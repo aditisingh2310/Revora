@@ -27,7 +27,7 @@ const quotes = [
 
 export function Testimonials() {
   return (
-    <section id="customers" className="relative noise px-4 py-28 sm:px-6">
+    <section id="customers" className="relative noise px-4 py-16 sm:px-6 sm:py-28">
       <div className="relative z-10 mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <motion.div
@@ -40,13 +40,13 @@ export function Testimonials() {
               <Sparkles className="h-3.5 w-3.5 text-white" />
               Verified Feedback
             </span>
-            <h2 className="mt-4 font-[family-name:var(--font-sora)] text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+            <h2 className="mt-4 font-[family-name:var(--font-sora)] text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
               Teams that live in their inbox.
             </h2>
           </motion.div>
         </div>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:mt-14 sm:gap-6 md:grid-cols-3">
           {quotes.map((q) => (
             <motion.blockquote
               key={q.name}
@@ -55,7 +55,7 @@ export function Testimonials() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
               onMouseEnter={playHoverSound}
-              className="rounded-3xl border border-white/10 bg-[#09090b]/80 p-8 backdrop-blur-xl transition hover:border-white/30 hover:shadow-[0_10px_30px_rgba(255,255,255,0.03)]"
+              className="rounded-3xl border border-white/10 bg-[#09090b]/80 p-5 backdrop-blur-xl transition hover:border-white/30 hover:shadow-[0_10px_30px_rgba(255,255,255,0.03)] sm:p-8"
             >
               <MessageSquare className="h-5 w-5 text-white/40 mb-4" />
               <p className="text-sm leading-relaxed text-[#a1a1aa] font-medium">“{q.text}”</p>

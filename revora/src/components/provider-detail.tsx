@@ -64,12 +64,12 @@ export function ProviderDetail({ provider: providerKey }: { provider: string }) 
   const requiresSetup = !connection || ["NOT_CONNECTED", "DISCONNECTED"].includes(connection.status);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <a href="/connections" data-testid="link-back-connections" className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="h-3.5 w-3.5" />All connections</a>
       <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
-        <div>
+        <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Provider detail</p>
-          <h1 className="mt-1 font-serif text-4xl tracking-[-.045em]">{meta.label}</h1>
+          <h1 className="mt-1 break-words font-serif text-3xl tracking-[-.045em] sm:text-4xl">{meta.label}</h1>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">{connection?.description || meta.description}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -83,7 +83,7 @@ export function ProviderDetail({ provider: providerKey }: { provider: string }) 
           )}
         </div>
       </div>
-      <div className="rounded-2xl border border-border/80 bg-card p-5 md:p-6">
+      <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 md:p-6">
         <StatusBadge status={connection?.status} />
         <h2 className="mt-3 text-lg font-semibold">{requiresSetup ? "Connection required" : connection?.externalAccountName || "Account configured"}</h2>
         <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
@@ -97,10 +97,10 @@ export function ProviderDetail({ provider: providerKey }: { provider: string }) 
         )}
       </div>
       {provider === "website" && (
-        <div className="rounded-2xl border border-border/80 bg-card p-5 md:p-6">
+        <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 md:p-6">
           <h3 className="text-sm font-semibold">Website configuration</h3>
           <p className="mt-1 text-xs text-muted-foreground">Enter your website URL to prepare the Revora tracking widget.</p>
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://your-website.com" className="flex-1 rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
             <button onClick={() => configure.mutate({ provider: "website", websiteUrl })} disabled={configure.isPending || !websiteUrl} className="rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground disabled:opacity-50">Save</button>
           </div>

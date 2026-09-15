@@ -35,10 +35,8 @@ minimumReleaseAgeExclude:
   - stripe-replit-sync
 
 packages:
-  - artifacts/*
   - lib/api-zod
   - lib/api-client-react
-  - lib/integrations/*
   - scripts
   - revora
 

@@ -63,7 +63,7 @@ export function Navbar() {
         {/* Desktop Actions */}
         <div className="hidden items-center gap-3 md:flex">
           <Link
-            href="/connections"
+            href="/auth"
             onMouseEnter={playHoverSound}
             onClick={playClickSound}
             className="text-xs font-semibold text-white/80 transition hover:text-white px-3 py-1.5"
@@ -71,7 +71,7 @@ export function Navbar() {
             Sign in
           </Link>
           <Link
-            href="/connections"
+            href="/auth"
             onMouseEnter={playHoverSound}
             onClick={playClickSound}
             className="group relative inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-bold text-black transition hover:scale-[1.03]"
@@ -116,14 +116,14 @@ export function Navbar() {
               ))}
               <div className="mt-4 flex flex-col gap-2.5 border-t border-white/10 pt-4">
                 <Link
-                  href="/connections"
+                  href="/auth"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center rounded-xl border border-white/20 py-2.5 text-sm font-bold text-white"
                 >
                   Sign in
                 </Link>
                 <Link
-                  href="/connections"
+                  href="/auth"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center rounded-xl bg-white py-2.5 text-sm font-bold text-black"
                 >
